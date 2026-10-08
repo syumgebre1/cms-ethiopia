@@ -45,17 +45,14 @@ export const authApi = {
     const res = await API.post<AuthResponse>('/auth/register', data);
     return res.data;
   },
-
   login: async (data: LoginInput): Promise<AuthResponse> => {
     const res = await API.post<AuthResponse>('/auth/login', data);
     return res.data;
   },
-
   me: async (): Promise<{ data: { user: User } }> => {
     const res = await API.get('/auth/me');
     return res.data;
   },
-
   changePassword: async (data: {
     currentPassword: string;
     newPassword: string;
@@ -73,12 +70,10 @@ export const reportApi = {
     const res = await API.post('/reports', data);
     return res.data;
   },
-
   getMine: async (): Promise<{ data: { reports: Report[] } }> => {
     const res = await API.get('/reports/me');
     return res.data;
   },
-
   getAll: async (): Promise<{ data: { reports: Report[] } }> => {
     const res = await API.get('/reports/all');
     return res.data;
@@ -95,6 +90,15 @@ export interface AdminUser {
   is_verified: boolean;
   is_locked: boolean;
   createdAt: string;
+}
+
+export interface AuditConversation {
+  id: string;
+  user1: { id: string; full_name: string; email: string; role: string };
+  user2: { id: string; full_name: string; email: string; role: string };
+  last_message: Message | null;
+  message_count: number;
+  last_message_at: string | null;
 }
 
 export const adminApi = {
@@ -139,6 +143,32 @@ export const adminApi = {
     const res = await API.patch(`/admin/users/${id}/reset-password`, {
       newPassword,
     });
+    return res.data;
+  },
+
+  // Audit
+  listAllConversations: async (search?: string): Promise<{
+    data: { conversations: AuditConversation[] };
+  }> => {
+    const res = await API.get('/admin/conversations', {
+      params: search ? { search } : {},
+    });
+    return res.data;
+  },
+
+  getConversationMessages: async (
+    id: string
+  ): Promise<{
+    data: {
+      conversation: {
+        id: string;
+        user1: { id: string; full_name: string; email: string };
+        user2: { id: string; full_name: string; email: string };
+      };
+      messages: Message[];
+    };
+  }> => {
+    const res = await API.get(`/admin/conversations/${id}`);
     return res.data;
   },
 };
@@ -189,14 +219,12 @@ export const messageApi = {
     const res = await API.get('/messages/contacts');
     return res.data;
   },
-
   listConversations: async (): Promise<{
     data: { conversations: ConversationSummary[] };
   }> => {
     const res = await API.get('/messages/conversations');
     return res.data;
   },
-
   startConversation: async (
     otherUserId: string
   ): Promise<{
@@ -210,7 +238,6 @@ export const messageApi = {
     const res = await API.post('/messages/conversations', { otherUserId });
     return res.data;
   },
-
   getMessages: async (
     conversationId: string
   ): Promise<{
@@ -222,7 +249,6 @@ export const messageApi = {
     const res = await API.get(`/messages/conversations/${conversationId}`);
     return res.data;
   },
-
   sendMessage: async (
     conversationId: string,
     body: string
@@ -232,7 +258,6 @@ export const messageApi = {
     });
     return res.data;
   },
-
   sendAttachment: async (
     conversationId: string,
     file: File,
@@ -245,13 +270,10 @@ export const messageApi = {
     const res = await API.post(
       `/messages/conversations/${conversationId}/attachment`,
       formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
     return res.data;
   },
-
   deleteMessage: async (messageId: string): Promise<{ message: string }> => {
     const res = await API.delete(`/messages/${messageId}`);
     return res.data;

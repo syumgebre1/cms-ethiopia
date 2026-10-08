@@ -33,7 +33,6 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
 
   return (
     <aside className="w-64 min-h-screen bg-base-100 border-r border-base-300 flex flex-col sticky top-0 h-screen">
-      {/* Logo */}
       <div className="p-4 border-b border-base-300">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
@@ -52,7 +51,6 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-2 mb-1">
           {t('sidebar.main')}
@@ -98,12 +96,12 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
         </NavLink>
 
         <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-4 mb-1">
-          Account
+          {t('sidebar.account')}
         </p>
 
         <NavLink to="/profile" className={linkClass('profile')}>
           <span className="text-lg">⚙️</span>
-          Profile
+          {t('sidebar.profile')}
         </NavLink>
 
         {isAdmin && (
@@ -115,19 +113,21 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
               <span className="text-lg">👥</span>
               {t('sidebar.user_management')}
             </NavLink>
+            <NavLink
+              to="/admin/conversations"
+              className={linkClass('audit')}
+            >
+              <span className="text-lg">🔍</span>
+              Conversation Audit
+            </NavLink>
             <NavLink to="/dashboard" className={linkClass('alerts')}>
               <span className="text-lg">⚠️</span>
               {t('sidebar.public_alerts')}
-            </NavLink>
-            <NavLink to="/dashboard" className={linkClass('audit')}>
-              <span className="text-lg">📊</span>
-              {t('sidebar.audit_logs')}
             </NavLink>
           </>
         )}
       </nav>
 
-      {/* User card */}
       <div className="p-3 border-t border-base-300">
         <div className="flex items-center gap-3 p-2 rounded-lg bg-base-200">
           <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
@@ -141,7 +141,6 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           </div>
         </div>
 
-        {/* Language Switcher + Theme Toggle */}
         <div className="flex justify-center items-center gap-2 mt-3">
           <LanguageSwitcher />
           <ThemeToggle />

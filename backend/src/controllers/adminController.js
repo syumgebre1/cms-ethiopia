@@ -1,4 +1,5 @@
-const { User } = require('../models');
+const { Op } = require('sequelize');
+const { User, Conversation, Message } = require('../models');
 
 // POST /api/v1/admin/users
 exports.createUser = async (req, res) => {
@@ -131,6 +132,114 @@ exports.resetPassword = async (req, res) => {
     await user.save();
 
     res.json({ message: 'Password reset successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET /api/v1/admin/conversations
+exports.listAllConversations = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    const conversations = await Conversation.findAll({
+      include: [
+        {
+          model: User,
+          as: 'user1',
+          attributes: ['id', 'full_name', 'email', 'role'],
+        },
+        {
+          model: User,
+          as: 'user2',
+          attributes: ['id', 'full_name', 'email', 'role'],
+        },
+      ],
+      order: [['last_message_at', 'DESC']],
+    });
+
+    const result = await Promise.all(
+      conversations.map(async (c) => {
+        const lastMessage = await Message.findOne({
+          where: { conversation_id: c.id },
+          order: [['createdAt', 'DESC']],
+        });
+
+        const messageCount = await Message.count({
+          where: { conversation_id: c.id, is_deleted: false },
+        });
+
+        return {
+          id: c.id,
+          user1: c.user1,
+          user2: c.user2,
+          last_message: lastMessage,
+          message_count: messageCount,
+          last_message_at: c.last_message_at,
+        };
+      })
+    );
+
+    // Optional search filter
+    let filtered = result;
+    if (search && search.trim()) {
+      const q = search.toLowerCase();
+      filtered = result.filter(
+        (r) =>
+          r.user1?.full_name?.toLowerCase().includes(q) ||
+          r.user2?.full_name?.toLowerCase().includes(q) ||
+          r.user1?.email?.toLowerCase().includes(q) ||
+          r.user2?.email?.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({ data: { conversations: filtered } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET /api/v1/admin/conversations/:id
+exports.getConversationMessages = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const conversation = await Conversation.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: 'user1',
+          attributes: ['id', 'full_name', 'email', 'role'],
+        },
+        {
+          model: User,
+          as: 'user2',
+          attributes: ['id', 'full_name', 'email', 'role'],
+        },
+      ],
+    });
+
+    if (!conversation)
+      return res.status(404).json({ message: 'Conversation not found' });
+
+    const messages = await Message.findAll({
+      where: { conversation_id: id },
+      include: [
+        { model: User, as: 'sender', attributes: ['id', 'full_name', 'role'] },
+      ],
+      order: [['createdAt', 'ASC']],
+    });
+
+    res.json({
+      data: {
+        conversation: {
+          id: conversation.id,
+          user1: conversation.user1,
+          user2: conversation.user2,
+        },
+        messages,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
