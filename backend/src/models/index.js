@@ -3,6 +3,7 @@ const User = require('./User');
 const Report = require('./Report');
 const Conversation = require('./Conversation');
 const Message = require('./Message');
+const PublicAlert = require('./PublicAlert');
 
 // ==================== User ↔ Report ====================
 User.hasMany(Report, {
@@ -53,10 +54,22 @@ Message.belongsTo(User, {
   as: 'sender',
 });
 
+// ==================== User ↔ PublicAlert ====================
+User.hasMany(PublicAlert, {
+  foreignKey: 'posted_by',
+  as: 'publicAlerts',
+});
+
+PublicAlert.belongsTo(User, {
+  foreignKey: 'posted_by',
+  as: 'poster',
+});
+
 module.exports = {
   sequelize,
   User,
   Report,
   Conversation,
   Message,
+  PublicAlert,
 };

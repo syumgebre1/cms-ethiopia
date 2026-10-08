@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const alertRoutes = require('./routes/alertRoutes');
 const { setupSocket } = require('./socket');
 
 const app = express();
@@ -23,7 +24,6 @@ const io = new Server(server, {
 
 app.set('io', io);
 
-// ==================== Middleware ====================
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -34,10 +34,10 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// ==================== Static uploads ====================
+// Static uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// ==================== Routes ====================
+// Routes
 app.get('/api/v1/health', (req, res) =>
   res.json({ ok: true, time: new Date() })
 );
@@ -46,8 +46,8 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/messages', messageRoutes);
+app.use('/api/v1/alerts', alertRoutes);
 
-// ==================== 404 + Error ====================
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
@@ -57,7 +57,6 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ message: err.message || 'Server error' });
 });
 
-// ==================== Start ====================
 const PORT = process.env.PORT || 5000;
 
 (async () => {

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Header from '../components/Header';
+import PublicAlertsSection from '../components/PublicAlertsSection';
 
 export default function LandingPage() {
   const { t } = useTranslation();
@@ -9,10 +10,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-base-100">
       <Header />
 
-      {/* ==================== Hero Section ==================== */}
+      {/* Hero */}
       <section className="px-4 lg:px-16 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Text */}
           <div>
             <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight text-base-content">
               {t('landing.hero_title_1')} <br />
@@ -37,8 +37,6 @@ export default function LandingPage() {
               </Link>
             </div>
           </div>
-
-          {/* Right: Hero image placeholder */}
           <div className="hidden lg:block">
             <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl h-96 flex items-center justify-center border border-primary/10">
               <span className="text-8xl">⚖️</span>
@@ -47,20 +45,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== Features Section ==================== */}
+      {/* Features */}
       <section className="bg-base-200 py-16 px-4 lg:px-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-base-content">
+            <h2 className="text-3xl lg:text-4xl font-bold">
               {t('landing.empowering_title')}
             </h2>
             <p className="mt-3 text-base-content/70">
               {t('landing.empowering_subtitle')}
             </p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Feature 1 */}
             <div className="card bg-base-100 shadow-md p-6 hover:shadow-lg transition">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                 📝
@@ -72,8 +68,6 @@ export default function LandingPage() {
                 {t('landing.feature_report_desc')}
               </p>
             </div>
-
-            {/* Feature 2 */}
             <div className="card bg-base-100 shadow-md p-6 hover:shadow-lg transition">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                 📋
@@ -85,8 +79,6 @@ export default function LandingPage() {
                 {t('landing.feature_track_desc')}
               </p>
             </div>
-
-            {/* Feature 3 */}
             <div className="card bg-base-100 shadow-md p-6 hover:shadow-lg transition">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                 💬
@@ -102,7 +94,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== Footer ==================== */}
+      {/* Public Alerts */}
+      <PublicAlertsSection />
+
+      {/* Footer */}
       <footer className="bg-base-100 border-t border-base-300 py-8 px-4 lg:px-16">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">

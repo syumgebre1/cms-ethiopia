@@ -106,7 +106,6 @@ export const adminApi = {
     const res = await API.get('/admin/users');
     return res.data;
   },
-
   createUser: async (data: {
     email: string;
     password: string;
@@ -118,7 +117,6 @@ export const adminApi = {
     const res = await API.post('/admin/users', data);
     return res.data;
   },
-
   updateUser: async (
     id: string,
     data: {
@@ -130,12 +128,10 @@ export const adminApi = {
     const res = await API.patch(`/admin/users/${id}`, data);
     return res.data;
   },
-
   deleteUser: async (id: string): Promise<{ message: string }> => {
     const res = await API.delete(`/admin/users/${id}`);
     return res.data;
   },
-
   resetPassword: async (
     id: string,
     newPassword: string
@@ -145,8 +141,6 @@ export const adminApi = {
     });
     return res.data;
   },
-
-  // Audit
   listAllConversations: async (search?: string): Promise<{
     data: { conversations: AuditConversation[] };
   }> => {
@@ -155,7 +149,6 @@ export const adminApi = {
     });
     return res.data;
   },
-
   getConversationMessages: async (
     id: string
   ): Promise<{
@@ -276,6 +269,109 @@ export const messageApi = {
   },
   deleteMessage: async (messageId: string): Promise<{ message: string }> => {
     const res = await API.delete(`/messages/${messageId}`);
+    return res.data;
+  },
+};
+
+// ==================== Alert Types ====================
+export type AlertType = 'fugitive' | 'missing' | 'wanted' | 'announcement';
+export type AlertStatus = 'active' | 'caught' | 'found' | 'archived';
+
+export interface PublicAlert {
+  id: string;
+  type: AlertType;
+  title: string;
+  full_name: string | null;
+  age: number | null;
+  description: string;
+  photo_url: string | null;
+  last_seen_location: string | null;
+  reward: string | null;
+  status: AlertStatus;
+  posted_by: string;
+  poster?: { id: string; full_name: string; role: string };
+  createdAt: string;
+}
+
+// ==================== Alert APIs ====================
+export const alertApi = {
+  // Public (no auth)
+  getPublic: async (params?: {
+    type?: AlertType;
+    search?: string;
+  }): Promise<{ data: { alerts: PublicAlert[] } }> => {
+    const res = await API.get('/alerts/public', { params });
+    return res.data;
+  },
+
+  // Staff
+  list: async (): Promise<{ data: { alerts: PublicAlert[] } }> => {
+    const res = await API.get('/alerts');
+    return res.data;
+  },
+
+  create: async (data: {
+    type: AlertType;
+    title: string;
+    full_name?: string;
+    age?: number;
+    description: string;
+    last_seen_location?: string;
+    reward?: string;
+    status?: AlertStatus;
+    photo?: File;
+  }): Promise<{ message: string; data: { alert: PublicAlert } }> => {
+    const formData = new FormData();
+    formData.append('type', data.type);
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    if (data.full_name) formData.append('full_name', data.full_name);
+    if (data.age !== undefined) formData.append('age', String(data.age));
+    if (data.last_seen_location)
+      formData.append('last_seen_location', data.last_seen_location);
+    if (data.reward) formData.append('reward', data.reward);
+    if (data.status) formData.append('status', data.status);
+    if (data.photo) formData.append('photo', data.photo);
+
+    const res = await API.post('/alerts', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  update: async (
+    id: string,
+    data: Partial<{
+      type: AlertType;
+      title: string;
+      full_name: string;
+      age: number;
+      description: string;
+      last_seen_location: string;
+      reward: string;
+      status: AlertStatus;
+      photo: File;
+    }>
+  ): Promise<{ message: string; data: { alert: PublicAlert } }> => {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'photo' && value instanceof File) {
+          formData.append('photo', value);
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
+
+    const res = await API.patch(`/alerts/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  delete: async (id: string): Promise<{ message: string }> => {
+    const res = await API.delete(`/alerts/${id}`);
     return res.data;
   },
 };

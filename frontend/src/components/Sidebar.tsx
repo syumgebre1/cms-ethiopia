@@ -18,6 +18,8 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
     user?.role === 'detective' ||
     user?.role === 'admin';
   const isAdmin = user?.role === 'admin';
+  const canManageAlerts =
+    user?.role === 'admin' || user?.role === 'detective';
 
   const handleLogout = () => {
     logout();
@@ -104,26 +106,30 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           {t('sidebar.profile')}
         </NavLink>
 
-        {isAdmin && (
+        {canManageAlerts && (
           <>
             <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-4 mb-1">
-              {t('sidebar.admin')}
+              {isAdmin ? t('sidebar.admin') : 'Staff'}
             </p>
-            <NavLink to="/admin/users" className={linkClass('users')}>
-              <span className="text-lg">👥</span>
-              {t('sidebar.user_management')}
-            </NavLink>
-            <NavLink
-              to="/admin/conversations"
-              className={linkClass('audit')}
-            >
-              <span className="text-lg">🔍</span>
-              Conversation Audit
-            </NavLink>
-            <NavLink to="/dashboard" className={linkClass('alerts')}>
+            <NavLink to="/admin/alerts" className={linkClass('alerts')}>
               <span className="text-lg">⚠️</span>
-              {t('sidebar.public_alerts')}
+              Public Alerts
             </NavLink>
+            {isAdmin && (
+              <>
+                <NavLink to="/admin/users" className={linkClass('users')}>
+                  <span className="text-lg">👥</span>
+                  {t('sidebar.user_management')}
+                </NavLink>
+                <NavLink
+                  to="/admin/conversations"
+                  className={linkClass('audit')}
+                >
+                  <span className="text-lg">🔍</span>
+                  Conversation Audit
+                </NavLink>
+              </>
+            )}
           </>
         )}
       </nav>
