@@ -53,6 +53,8 @@ export interface Report {
   crime_type: string;
   description: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   urgency: Urgency;
   status: ReportStatus;
   is_anonymous: boolean;
@@ -63,6 +65,7 @@ export interface Report {
     id: string;
     full_name: string;
     email: string;
+    phone?: string;
   };
 }
 
@@ -72,4 +75,6 @@ export interface CreateReportInput {
   location: string;
   urgency: Urgency;
   is_anonymous?: boolean;
+  latitude?: number;
+  longitude?: number;
 }

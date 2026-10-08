@@ -16,8 +16,54 @@ export default function ReportCrimePage() {
   const [location, setLocation] = useState('');
   const [urgency, setUrgency] = useState<Urgency>('medium');
   const [isAnonymous, setIsAnonymous] = useState(false);
+
+  // GPS state
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [locationGranted, setLocationGranted] = useState(false);
+
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const handleUseMyLocation = () => {
+    setLocationError('');
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setLocationGranted(true);
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError(
+            'Location permission denied. Please allow access in your browser settings.'
+          );
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setLocationError('Location information is unavailable.');
+        } else {
+          setLocationError('Failed to get your location. Try again.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const handleClearLocation = () => {
+    setLatitude(null);
+    setLongitude(null);
+    setLocationGranted(false);
+    setLocationError('');
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -36,6 +82,8 @@ export default function ReportCrimePage() {
         location,
         urgency,
         is_anonymous: isAnonymous,
+        latitude: latitude ?? undefined,
+        longitude: longitude ?? undefined,
       });
       navigate('/dashboard');
     } catch (err: any) {
@@ -161,6 +209,70 @@ export default function ReportCrimePage() {
                       {t('report.urgency_critical')}
                     </option>
                   </select>
+                </div>
+              </div>
+
+              {/* ==================== GPS LOCATION ==================== */}
+              <div className="p-4 bg-base-200 rounded-lg border border-base-300">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">📍</span>
+                      <span className="font-medium text-sm">
+                        Precise GPS Location (Optional)
+                      </span>
+                    </div>
+                    <p className="text-xs text-base-content/60">
+                      Attach your device's exact coordinates to help officers
+                      find the location on the map.
+                    </p>
+
+                    {locationGranted && latitude && longitude && (
+                      <div className="mt-3 p-2 bg-success/10 rounded border border-success/30">
+                        <p className="text-xs font-medium text-success mb-1">
+                          ✅ Location captured
+                        </p>
+                        <p className="text-xs font-mono text-base-content/70">
+                          Lat: {latitude.toFixed(6)} · Lng:{' '}
+                          {longitude.toFixed(6)}
+                        </p>
+                      </div>
+                    )}
+
+                    {locationError && (
+                      <p className="mt-2 text-xs text-error">
+                        ⚠️ {locationError}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {!locationGranted ? (
+                      <button
+                        type="button"
+                        onClick={handleUseMyLocation}
+                        disabled={locating}
+                        className="btn btn-sm btn-primary"
+                      >
+                        {locating ? (
+                          <>
+                            <span className="loading loading-spinner loading-xs"></span>
+                            Locating...
+                          </>
+                        ) : (
+                          '📍 Use My Location'
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleClearLocation}
+                        className="btn btn-sm btn-ghost"
+                      >
+                        ✕ Clear
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

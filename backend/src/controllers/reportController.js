@@ -3,7 +3,15 @@ const { Report, User } = require('../models');
 // POST /api/v1/reports
 exports.createReport = async (req, res) => {
   try {
-    const { crime_type, description, location, urgency, is_anonymous } = req.body;
+    const {
+      crime_type,
+      description,
+      location,
+      urgency,
+      is_anonymous,
+      latitude,
+      longitude,
+    } = req.body;
 
     if (!crime_type || !description || !location) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -16,6 +24,8 @@ exports.createReport = async (req, res) => {
       urgency: urgency || 'medium',
       is_anonymous: is_anonymous || false,
       user_id: is_anonymous ? null : req.user.id,
+      latitude: latitude ?? null,
+      longitude: longitude ?? null,
     });
 
     res.status(201).json({
@@ -27,7 +37,7 @@ exports.createReport = async (req, res) => {
   }
 };
 
-// POST /api/v1/reports/anonymous — PUBLIC, no auth required
+// POST /api/v1/reports/anonymous — PUBLIC
 exports.createAnonymousReport = async (req, res) => {
   try {
     const {
@@ -35,7 +45,8 @@ exports.createAnonymousReport = async (req, res) => {
       description,
       location,
       urgency,
-      reporter_contact,
+      latitude,
+      longitude,
     } = req.body;
 
     if (!crime_type || !description || !location) {
@@ -49,6 +60,8 @@ exports.createAnonymousReport = async (req, res) => {
       urgency: urgency || 'medium',
       is_anonymous: true,
       user_id: null,
+      latitude: latitude ?? null,
+      longitude: longitude ?? null,
     });
 
     res.status(201).json({
@@ -73,14 +86,13 @@ exports.getMyReports = async (req, res) => {
       where: { user_id: req.user.id },
       order: [['createdAt', 'DESC']],
     });
-
     res.json({ data: { reports } });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// GET /api/v1/reports/all (staff only)
+// GET /api/v1/reports/all (staff)
 exports.getAllReports = async (req, res) => {
   try {
     const reports = await Report.findAll({
@@ -93,7 +105,6 @@ exports.getAllReports = async (req, res) => {
       ],
       order: [['createdAt', 'DESC']],
     });
-
     res.json({ data: { reports } });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -134,7 +145,7 @@ exports.getReportById = async (req, res) => {
   }
 };
 
-// PATCH /api/v1/reports/:id/status (staff only)
+// PATCH /api/v1/reports/:id/status
 exports.updateReportStatus = async (req, res) => {
   try {
     const { id } = req.params;

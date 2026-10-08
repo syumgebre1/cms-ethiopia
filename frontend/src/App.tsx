@@ -6,6 +6,7 @@ import AnonymousReportPage from './pages/AnonymousReportPage';
 import DashboardPage from './pages/DashboardPage';
 import ReportCrimePage from './pages/ReportCrimePage';
 import ReportDetailPage from './pages/ReportDetailPage';
+import MapPage from './pages/MapPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminConversationsPage from './pages/AdminConversationsPage';
 import AlertsManagementPage from './pages/AlertsManagementPage';
@@ -27,6 +28,7 @@ function App() {
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/report" element={<ProtectedRoute><ReportCrimePage /></ProtectedRoute>} />
       <Route path="/reports/:id" element={<ProtectedRoute><ReportDetailPage /></ProtectedRoute>} />
+      <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
       <Route path="/messages/:id" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />

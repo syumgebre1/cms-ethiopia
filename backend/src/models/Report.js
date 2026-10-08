@@ -21,6 +21,14 @@ const Report = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 7),
+      allowNull: true,
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(10, 7),
+      allowNull: true,
+    },
     urgency: {
       type: DataTypes.ENUM('low', 'medium', 'high', 'critical'),
       defaultValue: 'medium',

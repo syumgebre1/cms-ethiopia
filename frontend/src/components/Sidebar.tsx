@@ -68,6 +68,11 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           {isStaff ? t('sidebar.all_reports') : t('sidebar.my_submissions')}
         </NavLink>
 
+        <NavLink to="/map" className={linkClass('map')}>
+          <span className="text-lg">🗺️</span>
+          Crime Map
+        </NavLink>
+
         {!isStaff && (
           <NavLink to="/report" className={linkClass('report')}>
             <span className="text-lg">🚨</span>
