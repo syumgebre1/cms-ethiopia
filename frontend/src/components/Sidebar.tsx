@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/useAuth';
+import { useNotifications } from '../context/useNotifications';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeToggle from './ThemeToggle';
 
@@ -11,6 +12,7 @@ interface SidebarProps {
 export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
 
   const isStaff =
@@ -94,12 +96,16 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
         <NavLink to="/messages" className={linkClass('messages')}>
           <span className="text-lg">💬</span>
           {t('sidebar.messages')}
-          <span className="badge badge-primary badge-xs ml-auto">3</span>
         </NavLink>
 
-        <NavLink to="/dashboard" className={linkClass('notifications')}>
+        <NavLink to="/notifications" className={linkClass('notifications')}>
           <span className="text-lg">🔔</span>
           {t('sidebar.notifications')}
+          {unreadCount > 0 && (
+            <span className="badge badge-error badge-xs ml-auto">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
         </NavLink>
 
         <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-4 mb-1">

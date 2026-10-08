@@ -395,3 +395,51 @@ export const alertApi = {
 };
 
 export default API;
+// ==================== Notification Types ====================
+export type NotificationType =
+  | 'report_created'
+  | 'report_status_changed'
+  | 'message_received'
+  | 'alert_published'
+  | 'account_created';
+
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link: string | null;
+  is_read: boolean;
+  createdAt: string;
+}
+
+// ==================== Notification APIs ====================
+export const notificationApi = {
+  list: async (): Promise<{
+    data: { notifications: AppNotification[]; unreadCount: number };
+  }> => {
+    const res = await API.get('/notifications');
+    return res.data;
+  },
+  unreadCount: async (): Promise<{ data: { count: number } }> => {
+    const res = await API.get('/notifications/unread-count');
+    return res.data;
+  },
+  markRead: async (id: string): Promise<{ message: string }> => {
+    const res = await API.patch(`/notifications/${id}/read`);
+    return res.data;
+  },
+  markAllRead: async (): Promise<{ message: string }> => {
+    const res = await API.patch('/notifications/read-all');
+    return res.data;
+  },
+  remove: async (id: string): Promise<{ message: string }> => {
+    const res = await API.delete(`/notifications/${id}`);
+    return res.data;
+  },
+  clearAll: async (): Promise<{ message: string }> => {
+    const res = await API.delete('/notifications');
+    return res.data;
+  },
+};

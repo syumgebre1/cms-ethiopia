@@ -1,7 +1,6 @@
 const { verifyAccessToken } = require('./utils/tokenUtils');
 const { User } = require('./models');
 
-// Track online users: { userId: Set<socketId> }
 const onlineUsers = new Map();
 
 const setupSocket = (io) => {
@@ -33,11 +32,16 @@ const setupSocket = (io) => {
     const userId = socket.user.id;
     console.log(`🟢 Connected: ${socket.user.full_name}`);
 
+    // Track online
     if (!onlineUsers.has(userId)) onlineUsers.set(userId, new Set());
     onlineUsers.get(userId).add(socket.id);
 
+    // Join personal room for notifications
+    socket.join(`user:${userId}`);
+
     io.emit('presence:online', { userId });
 
+    // ==================== Conversation rooms ====================
     socket.on('conversation:join', ({ conversationId }) => {
       socket.join(`conversation:${conversationId}`);
     });
@@ -46,6 +50,7 @@ const setupSocket = (io) => {
       socket.leave(`conversation:${conversationId}`);
     });
 
+    // ==================== Typing ====================
     socket.on('typing:start', ({ conversationId }) => {
       socket.to(`conversation:${conversationId}`).emit('typing:start', {
         conversationId,
@@ -61,6 +66,7 @@ const setupSocket = (io) => {
       });
     });
 
+    // ==================== Disconnect ====================
     socket.on('disconnect', () => {
       console.log(`🔴 Disconnected: ${socket.user.full_name}`);
 

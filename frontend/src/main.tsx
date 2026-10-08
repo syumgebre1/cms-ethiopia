@@ -5,7 +5,6 @@ import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Fix Leaflet default icons for Vite
 const DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -20,6 +19,7 @@ import App from './App.tsx';
 import { AuthProvider } from './context/AuthProvider.tsx';
 import { ThemeProvider } from './context/ThemeProvider.tsx';
 import { SocketProvider } from './context/SocketProvider.tsx';
+import { NotificationProvider } from './context/NotificationProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -27,7 +27,9 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <AuthProvider>
           <SocketProvider>
-            <App />
+            <NotificationProvider>
+              <App />
+            </NotificationProvider>
           </SocketProvider>
         </AuthProvider>
       </ThemeProvider>

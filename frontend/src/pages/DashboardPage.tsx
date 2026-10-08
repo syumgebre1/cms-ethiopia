@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/useAuth';
 import { reportApi, messageApi } from '../services/api';
 import Sidebar from '../components/Sidebar';
+import NotificationBell from '../components/NotificationBell';
 import type { Report } from '../types';
 
 export default function DashboardPage() {
@@ -93,10 +94,7 @@ export default function DashboardPage() {
               placeholder="Search..."
               className="input input-bordered input-sm hidden md:block w-64"
             />
-            <button className="btn btn-ghost btn-sm btn-circle relative">
-              🔔
-              <span className="badge badge-error badge-xs absolute top-1 right-1"></span>
-            </button>
+            <NotificationBell />
             <div className="text-sm text-base-content/70 hidden lg:block">
               Hi, <span className="font-semibold">{user?.full_name}</span>
             </div>
@@ -393,9 +391,12 @@ export default function DashboardPage() {
                 >
                   💬 {t('dashboard.action_messages')}
                 </Link>
-                <button className="btn btn-outline btn-sm w-full justify-start">
-                  📄 {t('dashboard.action_view_reports')}
-                </button>
+                <Link
+                  to="/notifications"
+                  className="btn btn-outline btn-sm w-full justify-start"
+                >
+                  🔔 Notifications
+                </Link>
                 {isAdmin && (
                   <button
                     onClick={() => navigate('/admin/users')}
