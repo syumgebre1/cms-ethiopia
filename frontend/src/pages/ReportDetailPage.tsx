@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Sidebar from '../components/Sidebar';
 import { reportApi } from '../services/api';
 import { useAuth } from '../context/useAuth';
+import { downloadReportPdf } from '../utils/reportPdf';
 import type { Report } from '../types';
 
 const URGENCY_BADGE: Record<string, string> = {
@@ -67,6 +68,11 @@ export default function ReportDetailPage() {
     }
   };
 
+  const handleDownloadPdf = () => {
+    if (!report) return;
+    downloadReportPdf(report);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-base-200 flex">
@@ -122,6 +128,29 @@ export default function ReportDetailPage() {
               })}
             </p>
           </div>
+
+          {/* Download PDF button */}
+          <button
+            onClick={handleDownloadPdf}
+            className="btn btn-primary btn-sm gap-2"
+            title="Download printable PDF"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+              />
+            </svg>
+            Download PDF
+          </button>
         </header>
 
         <main className="p-4 lg:p-8 max-w-4xl">
@@ -147,6 +176,11 @@ export default function ReportDetailPage() {
                   Anonymous
                 </span>
               )}
+              {report.latitude && report.longitude && (
+                <span className="badge badge-lg badge-success gap-1">
+                  📍 GPS Captured
+                </span>
+              )}
             </div>
           </div>
 
@@ -168,6 +202,26 @@ export default function ReportDetailPage() {
                 <p className="font-medium capitalize">{report.urgency}</p>
               </div>
             </div>
+
+            {report.latitude && report.longitude && (
+              <div className="mb-6">
+                <p className="text-xs uppercase text-base-content/50 font-semibold mb-1">
+                  GPS Coordinates
+                </p>
+                <p className="font-mono text-sm">
+                  {Number(report.latitude).toFixed(6)},{' '}
+                  {Number(report.longitude).toFixed(6)}
+                </p>
+                <a
+                  href={`https://www.google.com/maps?q=${report.latitude},${report.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="link link-primary text-xs mt-1 inline-block"
+                >
+                  Open in Google Maps →
+                </a>
+              </div>
+            )}
 
             <div>
               <p className="text-xs uppercase text-base-content/50 font-semibold mb-2">
@@ -233,21 +287,9 @@ export default function ReportDetailPage() {
                     label: 'Under Review',
                     color: 'btn-info',
                   },
-                  {
-                    value: 'escalated',
-                    label: 'Escalate',
-                    color: 'btn-error',
-                  },
-                  {
-                    value: 'resolved',
-                    label: 'Resolve',
-                    color: 'btn-success',
-                  },
-                  {
-                    value: 'rejected',
-                    label: 'Reject',
-                    color: 'btn-ghost',
-                  },
+                  { value: 'escalated', label: 'Escalate', color: 'btn-error' },
+                  { value: 'resolved', label: 'Resolve', color: 'btn-success' },
+                  { value: 'rejected', label: 'Reject', color: 'btn-ghost' },
                 ].map((s) => (
                   <button
                     key={s.value}
