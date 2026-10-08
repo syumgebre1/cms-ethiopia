@@ -70,12 +70,36 @@ export const reportApi = {
     const res = await API.post('/reports', data);
     return res.data;
   },
+  createAnonymous: async (data: {
+    crime_type: string;
+    description: string;
+    location: string;
+    urgency: string;
+  }): Promise<{
+    data: {
+      report: { id: string; crime_type: string; reference: string };
+    };
+  }> => {
+    const res = await API.post('/reports/anonymous', data);
+    return res.data;
+  },
   getMine: async (): Promise<{ data: { reports: Report[] } }> => {
     const res = await API.get('/reports/me');
     return res.data;
   },
   getAll: async (): Promise<{ data: { reports: Report[] } }> => {
     const res = await API.get('/reports/all');
+    return res.data;
+  },
+  getById: async (id: string): Promise<{ data: { report: Report } }> => {
+    const res = await API.get(`/reports/${id}`);
+    return res.data;
+  },
+  updateStatus: async (
+    id: string,
+    status: string
+  ): Promise<{ message: string; data: { report: Report } }> => {
+    const res = await API.patch(`/reports/${id}/status`, { status });
     return res.data;
   },
 };
@@ -295,7 +319,6 @@ export interface PublicAlert {
 
 // ==================== Alert APIs ====================
 export const alertApi = {
-  // Public (no auth)
   getPublic: async (params?: {
     type?: AlertType;
     search?: string;
@@ -303,13 +326,10 @@ export const alertApi = {
     const res = await API.get('/alerts/public', { params });
     return res.data;
   },
-
-  // Staff
   list: async (): Promise<{ data: { alerts: PublicAlert[] } }> => {
     const res = await API.get('/alerts');
     return res.data;
   },
-
   create: async (data: {
     type: AlertType;
     title: string;
@@ -338,7 +358,6 @@ export const alertApi = {
     });
     return res.data;
   },
-
   update: async (
     id: string,
     data: Partial<{
@@ -369,7 +388,6 @@ export const alertApi = {
     });
     return res.data;
   },
-
   delete: async (id: string): Promise<{ message: string }> => {
     const res = await API.delete(`/alerts/${id}`);
     return res.data;

@@ -36,7 +36,21 @@ export default function LandingPage() {
                 {t('landing.access_portal')}
               </Link>
             </div>
+
+            {/* Anonymous Report Link */}
+            <div className="mt-6 flex items-center gap-2 text-sm">
+              <span className="text-base-content/60">
+                Prefer not to sign up?
+              </span>
+              <Link
+                to="/anonymous-report"
+                className="link link-primary font-medium"
+              >
+                🕵️ Report Anonymously →
+              </Link>
+            </div>
           </div>
+
           <div className="hidden lg:block">
             <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl h-96 flex items-center justify-center border border-primary/10">
               <span className="text-8xl">⚖️</span>

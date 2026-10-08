@@ -51,8 +51,11 @@ export default function DashboardPage() {
     return t('dashboard.greeting_evening');
   };
 
-  // ==================== Message reporter ====================
-  const handleMessageReporter = async (report: Report) => {
+  const handleMessageReporter = async (
+    e: React.MouseEvent,
+    report: Report
+  ) => {
+    e.stopPropagation();
     if (!report.user_id) {
       setMessageError('This report was submitted anonymously');
       setTimeout(() => setMessageError(''), 3000);
@@ -72,7 +75,6 @@ export default function DashboardPage() {
       <Sidebar activeItem="dashboard" />
 
       <div className="flex-1 min-w-0">
-        {/* Top bar */}
         <header className="bg-base-100 border-b border-base-300 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
           <div>
             <h1 className="text-lg font-bold">{t('dashboard.title')}</h1>
@@ -101,16 +103,13 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Content */}
         <main className="p-4 lg:p-8">
-          {/* Message error toast */}
           {messageError && (
             <div className="alert alert-warning text-sm mb-4">
               <span>{messageError}</span>
             </div>
           )}
 
-          {/* Welcome hero */}
           <div className="card bg-gradient-to-r from-primary to-primary/70 text-white shadow-md p-6 mb-6">
             <div className="flex justify-between items-center flex-wrap gap-4">
               <div>
@@ -138,7 +137,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Stat cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="card bg-base-100 shadow-sm p-4">
               <div className="flex justify-between items-start">
@@ -153,21 +151,21 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-
             <div className="card bg-base-100 shadow-sm p-4">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-xs text-base-content/60 uppercase">
                     {t('dashboard.pending')}
                   </p>
-                  <p className="text-3xl font-bold text-warning mt-1">{pending}</p>
+                  <p className="text-3xl font-bold text-warning mt-1">
+                    {pending}
+                  </p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
                   ⏳
                 </div>
               </div>
             </div>
-
             <div className="card bg-base-100 shadow-sm p-4">
               <div className="flex justify-between items-start">
                 <div>
@@ -183,7 +181,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-
             <div className="card bg-base-100 shadow-sm p-4">
               <div className="flex justify-between items-start">
                 <div>
@@ -201,7 +198,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Main grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div className="card bg-base-100 shadow-sm p-6 lg:col-span-2">
               <div className="flex justify-between items-center mb-4">
@@ -222,14 +218,6 @@ export default function DashboardPage() {
                   <p className="text-base-content/60">
                     {t('dashboard.no_reports')}
                   </p>
-                  {!isStaff && (
-                    <Link
-                      to="/report"
-                      className="btn btn-primary btn-sm mt-4 rounded-full"
-                    >
-                      {t('dashboard.create_first_report')}
-                    </Link>
-                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -246,7 +234,11 @@ export default function DashboardPage() {
                     </thead>
                     <tbody>
                       {reports.slice(0, 10).map((r) => (
-                        <tr key={r.id} className="hover">
+                        <tr
+                          key={r.id}
+                          onClick={() => navigate(`/reports/${r.id}`)}
+                          className="hover cursor-pointer"
+                        >
                           <td className="font-medium">{r.crime_type}</td>
                           <td className="text-base-content/70">
                             {r.location}
@@ -302,7 +294,7 @@ export default function DashboardPage() {
                           {isStaff && (
                             <td>
                               <button
-                                onClick={() => handleMessageReporter(r)}
+                                onClick={(e) => handleMessageReporter(e, r)}
                                 disabled={!r.user_id}
                                 className="btn btn-ghost btn-xs"
                                 title={
@@ -336,7 +328,6 @@ export default function DashboardPage() {
                     <div
                       className="w-full bg-primary rounded-t-md transition-all hover:bg-primary/80"
                       style={{ height: `${(val / maxVal) * 100}%` }}
-                      title={`${val} reports`}
                     ></div>
                     <span className="text-xs text-base-content/60">
                       {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
@@ -347,7 +338,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Bottom row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="card bg-base-100 shadow-sm p-6 lg:col-span-2">
               <h2 className="text-lg font-bold mb-4">
