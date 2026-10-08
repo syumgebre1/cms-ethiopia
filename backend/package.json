@@ -2,15 +2,17 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed": "node src/utils/seed.js"
+    "seed": "node src/utils/seed.js",
+    "seed:demo": "node src/utils/seedDemo.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "CMS Ethiopia - Backend API",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -26,7 +28,7 @@
     "mysql2": "^3.24.5",
     "nodemailer": "^10.0.16",
     "sequelize": "^6.37.8",
-    "socket.io": "^4.8.4",
+    "socket.io": "^4.8.3",
     "winston": "^3.19.0"
   },
   "devDependencies": {
