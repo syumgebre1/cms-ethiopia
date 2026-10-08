@@ -14,6 +14,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const alertRoutes = require('./routes/alertRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const { setupSocket } = require('./socket');
 
 const app = express();
@@ -34,10 +35,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Static uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Routes
 app.get('/api/v1/health', (req, res) =>
   res.json({ ok: true, time: new Date() })
 );
@@ -47,6 +46,7 @@ app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/messages', messageRoutes);
 app.use('/api/v1/alerts', alertRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

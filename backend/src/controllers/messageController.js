@@ -1,7 +1,9 @@
 const { Op } = require('sequelize');
 const { User, Conversation, Message } = require('../models');
 const { isUserOnline } = require('../socket');
+const { notify } = require('../utils/notify');
 
+// ==================== Helper ====================
 const findOrCreateConversation = async (userId, otherUserId) => {
   if (userId === otherUserId) throw new Error('Cannot message yourself');
   const [user1_id, user2_id] =
@@ -15,7 +17,7 @@ const findOrCreateConversation = async (userId, otherUserId) => {
   return conversation;
 };
 
-// GET /api/v1/messages/contacts
+// ==================== GET /contacts ====================
 exports.getContacts = async (req, res) => {
   try {
     const me = req.user;
@@ -40,7 +42,7 @@ exports.getContacts = async (req, res) => {
   }
 };
 
-// GET /api/v1/messages/conversations
+// ==================== GET /conversations ====================
 exports.listConversations = async (req, res) => {
   try {
     const myId = req.user.id;
@@ -95,7 +97,7 @@ exports.listConversations = async (req, res) => {
   }
 };
 
-// POST /api/v1/messages/conversations
+// ==================== POST /conversations ====================
 exports.startConversation = async (req, res) => {
   try {
     const { otherUserId } = req.body;
@@ -133,7 +135,7 @@ exports.startConversation = async (req, res) => {
   }
 };
 
-// GET /api/v1/messages/conversations/:id
+// ==================== GET /conversations/:id ====================
 exports.getMessages = async (req, res) => {
   try {
     const { id } = req.params;
@@ -197,7 +199,7 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-// POST /api/v1/messages/conversations/:id  (text message)
+// ==================== POST /conversations/:id ====================
 exports.sendMessage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -232,13 +234,26 @@ exports.sendMessage = async (req, res) => {
     const io = req.app.get('io');
     if (io) io.to(`conversation:${id}`).emit('message:new', fullMessage);
 
+    // Notify the recipient
+    const recipientId =
+      conversation.user1_id === myId
+        ? conversation.user2_id
+        : conversation.user1_id;
+
+    await notify(io, recipientId, {
+      type: 'message_received',
+      title: `New message from ${req.user.full_name}`,
+      body: body.trim().slice(0, 100),
+      link: `/messages/${id}`,
+    });
+
     res.status(201).json({ data: { message: fullMessage } });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// POST /api/v1/messages/conversations/:id/attachment  (file message)
+// ==================== POST /conversations/:id/attachment ====================
 exports.sendAttachment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -246,8 +261,7 @@ exports.sendAttachment = async (req, res) => {
     const file = req.file;
     const { caption } = req.body;
 
-    if (!file)
-      return res.status(400).json({ message: 'No file uploaded' });
+    if (!file) return res.status(400).json({ message: 'No file uploaded' });
 
     const conversation = await Conversation.findByPk(id);
     if (!conversation)
@@ -257,7 +271,6 @@ exports.sendAttachment = async (req, res) => {
       conversation.user1_id === myId || conversation.user2_id === myId;
     if (!isParticipant) return res.status(403).json({ message: 'Access denied' });
 
-    // Public URL
     const attachment_url = `/uploads/messages/${file.filename}`;
 
     const message = await Message.create({
@@ -281,13 +294,26 @@ exports.sendAttachment = async (req, res) => {
     const io = req.app.get('io');
     if (io) io.to(`conversation:${id}`).emit('message:new', fullMessage);
 
+    // Notify recipient
+    const recipientId =
+      conversation.user1_id === myId
+        ? conversation.user2_id
+        : conversation.user1_id;
+
+    await notify(io, recipientId, {
+      type: 'message_received',
+      title: `📎 File from ${req.user.full_name}`,
+      body: file.originalname,
+      link: `/messages/${id}`,
+    });
+
     res.status(201).json({ data: { message: fullMessage } });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// DELETE /api/v1/messages/:id
+// ==================== DELETE /:id ====================
 exports.deleteMessage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -313,7 +339,7 @@ exports.deleteMessage = async (req, res) => {
   }
 };
 
-// PATCH /api/v1/messages/:id/read
+// ==================== PATCH /:id/read ====================
 exports.markRead = async (req, res) => {
   try {
     const { id } = req.params;

@@ -4,38 +4,17 @@ const Report = require('./Report');
 const Conversation = require('./Conversation');
 const Message = require('./Message');
 const PublicAlert = require('./PublicAlert');
+const Notification = require('./Notification');
 
 // ==================== User ↔ Report ====================
-User.hasMany(Report, {
-  foreignKey: 'user_id',
-  as: 'reports',
-});
-
-Report.belongsTo(User, {
-  foreignKey: 'user_id',
-  as: 'reporter',
-});
+User.hasMany(Report, { foreignKey: 'user_id', as: 'reports' });
+Report.belongsTo(User, { foreignKey: 'user_id', as: 'reporter' });
 
 // ==================== User ↔ Conversation ====================
-User.hasMany(Conversation, {
-  foreignKey: 'user1_id',
-  as: 'conversationsAsUser1',
-});
-
-User.hasMany(Conversation, {
-  foreignKey: 'user2_id',
-  as: 'conversationsAsUser2',
-});
-
-Conversation.belongsTo(User, {
-  foreignKey: 'user1_id',
-  as: 'user1',
-});
-
-Conversation.belongsTo(User, {
-  foreignKey: 'user2_id',
-  as: 'user2',
-});
+User.hasMany(Conversation, { foreignKey: 'user1_id', as: 'conversationsAsUser1' });
+User.hasMany(Conversation, { foreignKey: 'user2_id', as: 'conversationsAsUser2' });
+Conversation.belongsTo(User, { foreignKey: 'user1_id', as: 'user1' });
+Conversation.belongsTo(User, { foreignKey: 'user2_id', as: 'user2' });
 
 // ==================== Conversation ↔ Message ====================
 Conversation.hasMany(Message, {
@@ -43,27 +22,20 @@ Conversation.hasMany(Message, {
   as: 'messages',
   onDelete: 'CASCADE',
 });
-
-Message.belongsTo(Conversation, {
-  foreignKey: 'conversation_id',
-  as: 'conversation',
-});
-
-Message.belongsTo(User, {
-  foreignKey: 'sender_id',
-  as: 'sender',
-});
+Message.belongsTo(Conversation, { foreignKey: 'conversation_id', as: 'conversation' });
+Message.belongsTo(User, { foreignKey: 'sender_id', as: 'sender' });
 
 // ==================== User ↔ PublicAlert ====================
-User.hasMany(PublicAlert, {
-  foreignKey: 'posted_by',
-  as: 'publicAlerts',
-});
+User.hasMany(PublicAlert, { foreignKey: 'posted_by', as: 'publicAlerts' });
+PublicAlert.belongsTo(User, { foreignKey: 'posted_by', as: 'poster' });
 
-PublicAlert.belongsTo(User, {
-  foreignKey: 'posted_by',
-  as: 'poster',
+// ==================== User ↔ Notification ====================
+User.hasMany(Notification, {
+  foreignKey: 'user_id',
+  as: 'notifications',
+  onDelete: 'CASCADE',
 });
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 module.exports = {
   sequelize,
@@ -72,4 +44,5 @@ module.exports = {
   Conversation,
   Message,
   PublicAlert,
+  Notification,
 };

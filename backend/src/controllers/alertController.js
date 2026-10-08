@@ -1,8 +1,8 @@
 const { Op } = require('sequelize');
 const { PublicAlert, User } = require('../models');
+const { notifyRoles } = require('../utils/notify');
 
 // ==================== PUBLIC ====================
-// GET /api/v1/alerts/public — no auth, for landing page
 exports.getPublicAlerts = async (req, res) => {
   try {
     const { type, search } = req.query;
@@ -37,7 +37,6 @@ exports.getPublicAlerts = async (req, res) => {
 };
 
 // ==================== STAFF ====================
-// GET /api/v1/alerts — list (all statuses)
 exports.listAlerts = async (req, res) => {
   try {
     const alerts = await PublicAlert.findAll({
@@ -53,7 +52,6 @@ exports.listAlerts = async (req, res) => {
   }
 };
 
-// POST /api/v1/alerts
 exports.createAlert = async (req, res) => {
   try {
     const {
@@ -96,13 +94,21 @@ exports.createAlert = async (req, res) => {
       ],
     });
 
+    // Notify all citizens about the new alert
+    const io = req.app.get('io');
+    await notifyRoles(io, ['citizen'], {
+      type: 'alert_published',
+      title: `New ${type} Alert`,
+      body: title,
+      link: '/',
+    });
+
     res.status(201).json({ message: 'Alert created', data: { alert: full } });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// PATCH /api/v1/alerts/:id
 exports.updateAlert = async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,7 +116,6 @@ exports.updateAlert = async (req, res) => {
 
     if (!alert) return res.status(404).json({ message: 'Alert not found' });
 
-    // Only poster or admin can edit
     if (alert.posted_by !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Can only edit your own alerts' });
     }
@@ -154,7 +159,6 @@ exports.updateAlert = async (req, res) => {
   }
 };
 
-// DELETE /api/v1/alerts/:id
 exports.deleteAlert = async (req, res) => {
   try {
     const { id } = req.params;

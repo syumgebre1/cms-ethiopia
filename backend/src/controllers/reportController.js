@@ -1,4 +1,5 @@
 const { Report, User } = require('../models');
+const { notify, notifyRoles } = require('../utils/notify');
 
 // POST /api/v1/reports
 exports.createReport = async (req, res) => {
@@ -28,6 +29,15 @@ exports.createReport = async (req, res) => {
       longitude: longitude ?? null,
     });
 
+    // Notify all staff about the new report
+    const io = req.app.get('io');
+    await notifyRoles(io, ['officer', 'detective', 'admin'], {
+      type: 'report_created',
+      title: 'New Report Submitted',
+      body: `${crime_type} reported at ${location}`,
+      link: `/reports/${report.id}`,
+    });
+
     res.status(201).json({
       message: 'Report submitted successfully',
       data: { report },
@@ -37,7 +47,7 @@ exports.createReport = async (req, res) => {
   }
 };
 
-// POST /api/v1/reports/anonymous — PUBLIC
+// POST /api/v1/reports/anonymous
 exports.createAnonymousReport = async (req, res) => {
   try {
     const {
@@ -62,6 +72,14 @@ exports.createAnonymousReport = async (req, res) => {
       user_id: null,
       latitude: latitude ?? null,
       longitude: longitude ?? null,
+    });
+
+    const io = req.app.get('io');
+    await notifyRoles(io, ['officer', 'detective', 'admin'], {
+      type: 'report_created',
+      title: 'New Anonymous Report',
+      body: `${crime_type} reported at ${location}`,
+      link: `/reports/${report.id}`,
     });
 
     res.status(201).json({
@@ -92,7 +110,7 @@ exports.getMyReports = async (req, res) => {
   }
 };
 
-// GET /api/v1/reports/all (staff)
+// GET /api/v1/reports/all
 exports.getAllReports = async (req, res) => {
   try {
     const reports = await Report.findAll({
@@ -167,8 +185,23 @@ exports.updateReportStatus = async (req, res) => {
       return res.status(404).json({ message: 'Report not found' });
     }
 
+    const oldStatus = report.status;
     report.status = status;
     await report.save();
+
+    // Notify reporter if status changed
+    if (oldStatus !== status && report.user_id) {
+      const io = req.app.get('io');
+      await notify(io, report.user_id, {
+        type: 'report_status_changed',
+        title: 'Report Status Updated',
+        body: `Your ${report.crime_type} report is now: ${status.replace(
+          '_',
+          ' '
+        )}`,
+        link: `/reports/${report.id}`,
+      });
+    }
 
     res.json({ message: 'Status updated', data: { report } });
   } catch (err) {
