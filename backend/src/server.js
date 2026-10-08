@@ -19,26 +19,44 @@ const { setupSocket } = require('./socket');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: process.env.CLIENT_URL, credentials: true },
-});
 
+// ==================== CORS Configuration ====================
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    console.log('❌ CORS blocked origin:', origin);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+};
+
+const io = new Server(server, { cors: corsOptions });
 app.set('io', io);
 
+// ==================== Middleware ====================
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// ==================== Routes ====================
 app.get('/api/v1/health', (req, res) =>
-  res.json({ ok: true, time: new Date() })
+  res.json({ ok: true, time: new Date(), env: process.env.NODE_ENV })
 );
 
 app.use('/api/v1/auth', authRoutes);
@@ -48,15 +66,18 @@ app.use('/api/v1/messages', messageRoutes);
 app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 
+// ==================== 404 ====================
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
+// ==================== Error Handler ====================
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ message: err.message || 'Server error' });
 });
 
+// ==================== Start Server ====================
 const PORT = process.env.PORT || 5000;
 
 (async () => {
@@ -64,14 +85,20 @@ const PORT = process.env.PORT || 5000;
     await sequelize.authenticate();
     console.log('✅ MySQL connected');
 
-    await sequelize.sync({ alter: true });
-    console.log('✅ Models synced');
+    // Only sync schema in development — never in production
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync();
+      console.log('✅ Models synced (development)');
+    } else {
+      console.log('ℹ️  Sync skipped (production mode)');
+    }
 
     setupSocket(io);
 
     server.listen(PORT, () => {
-      console.log(`🚀 Server on http://localhost:${PORT}`);
+      console.log(`🚀 Server on port ${PORT}`);
       console.log(`   Health: http://localhost:${PORT}/api/v1/health`);
+      console.log(`   Env: ${process.env.NODE_ENV || 'development'}`);
       console.log(`   Socket.IO: ready`);
     });
   } catch (err) {
