@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '../components/Header';
 
 export default function LandingPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-base-100">
       <Header />
@@ -12,27 +15,25 @@ export default function LandingPage() {
           {/* Left: Text */}
           <div>
             <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight text-base-content">
-              Securing the <br />
-              Future of <br />
-              <span className="text-primary">Ethiopia</span>
+              {t('landing.hero_title_1')} <br />
+              {t('landing.hero_title_2')} <br />
+              <span className="text-primary">{t('landing.hero_title_3')}</span>
             </h1>
             <p className="mt-6 text-lg text-base-content/70 max-w-lg">
-              A modern, unified platform for citizens and law enforcement to
-              report, track, and resolve crimes efficiently. Together, we build
-              a safer nation.
+              {t('landing.hero_subtitle')}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 to="/register"
                 className="btn btn-primary rounded-full px-8"
               >
-                Get Started
+                {t('landing.get_started')}
               </Link>
               <Link
                 to="/login"
                 className="btn btn-outline rounded-full px-8"
               >
-                Access Portal
+                {t('landing.access_portal')}
               </Link>
             </div>
           </div>
@@ -51,11 +52,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold text-base-content">
-              Empowering Justice
+              {t('landing.empowering_title')}
             </h2>
             <p className="mt-3 text-base-content/70">
-              Our platform provides the tools needed for modern law enforcement
-              and active citizenship.
+              {t('landing.empowering_subtitle')}
             </p>
           </div>
 
@@ -65,10 +65,11 @@ export default function LandingPage() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                 📝
               </div>
-              <h3 className="mt-4 text-xl font-bold">Instant Reporting</h3>
+              <h3 className="mt-4 text-xl font-bold">
+                {t('landing.feature_report_title')}
+              </h3>
               <p className="mt-2 text-base-content/70 text-sm">
-                Citizens can report incidents instantly with photo and video
-                evidence directly from their devices.
+                {t('landing.feature_report_desc')}
               </p>
             </div>
 
@@ -77,10 +78,11 @@ export default function LandingPage() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                 📋
               </div>
-              <h3 className="mt-4 text-xl font-bold">Case Tracking</h3>
+              <h3 className="mt-4 text-xl font-bold">
+                {t('landing.feature_track_title')}
+              </h3>
               <p className="mt-2 text-base-content/70 text-sm">
-                Monitor the progress of reported cases in real-time. Stay
-                informed through every stage of the investigation.
+                {t('landing.feature_track_desc')}
               </p>
             </div>
 
@@ -89,10 +91,11 @@ export default function LandingPage() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                 💬
               </div>
-              <h3 className="mt-4 text-xl font-bold">Secure Messaging</h3>
+              <h3 className="mt-4 text-xl font-bold">
+                {t('landing.feature_message_title')}
+              </h3>
               <p className="mt-2 text-base-content/70 text-sm">
-                Direct communication line between citizens and assigned officers
-                for updates and additional information.
+                {t('landing.feature_message_desc')}
               </p>
             </div>
           </div>
@@ -106,10 +109,10 @@ export default function LandingPage() {
             <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
               <span className="text-white text-xs font-bold">C</span>
             </div>
-            <span className="text-sm font-semibold">CMS Ethiopia</span>
+            <span className="text-sm font-semibold">{t('app.name')}</span>
           </div>
           <p className="text-xs text-base-content/60">
-            © {new Date().getFullYear()} CMS Ethiopia. All rights reserved.
+            © {new Date().getFullYear()} {t('landing.footer_copyright')}
           </p>
         </div>
       </footer>

@@ -1,11 +1,15 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/useAuth';
+import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
 
 interface SidebarProps {
   activeItem?: string;
 }
 
 export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -36,13 +40,13 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
             <span className="text-white font-bold">C</span>
           </div>
           <div>
-            <p className="text-sm font-bold leading-tight">CMS Ethiopia</p>
+            <p className="text-sm font-bold leading-tight">{t('app.name')}</p>
             <p className="text-xs text-base-content/60">
               {isAdmin
-                ? 'Admin Portal'
+                ? t('sidebar.admin_portal')
                 : isStaff
-                ? 'Staff Portal'
-                : 'Citizen Portal'}
+                ? t('sidebar.staff_portal')
+                : t('sidebar.citizen_portal')}
             </p>
           </div>
         </div>
@@ -51,64 +55,64 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-2 mb-1">
-          Main
+          {t('sidebar.main')}
         </p>
 
         <NavLink to="/dashboard" className={linkClass('dashboard')}>
           <span className="text-lg">🏠</span>
-          Dashboard
+          {t('sidebar.dashboard')}
         </NavLink>
 
         <NavLink to="/dashboard" className={linkClass('submissions')}>
           <span className="text-lg">📄</span>
-          {isStaff ? 'All Reports' : 'My Submissions'}
+          {isStaff ? t('sidebar.all_reports') : t('sidebar.my_submissions')}
         </NavLink>
 
         {!isStaff && (
           <NavLink to="/report" className={linkClass('report')}>
             <span className="text-lg">🚨</span>
-            Report Crime
+            {t('sidebar.report_crime')}
           </NavLink>
         )}
 
         {isStaff && (
           <NavLink to="/dashboard" className={linkClass('cases')}>
             <span className="text-lg">📁</span>
-            Cases
+            {t('sidebar.cases')}
           </NavLink>
         )}
 
         <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-4 mb-1">
-          Communication
+          {t('sidebar.communication')}
         </p>
 
         <NavLink to="/dashboard" className={linkClass('messages')}>
           <span className="text-lg">💬</span>
-          Messages
+          {t('sidebar.messages')}
           <span className="badge badge-primary badge-xs ml-auto">3</span>
         </NavLink>
 
         <NavLink to="/dashboard" className={linkClass('notifications')}>
           <span className="text-lg">🔔</span>
-          Notifications
+          {t('sidebar.notifications')}
         </NavLink>
 
         {isAdmin && (
           <>
             <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-4 mb-1">
-              Admin
+              {t('sidebar.admin')}
             </p>
             <NavLink to="/dashboard" className={linkClass('users')}>
               <span className="text-lg">👥</span>
-              User Management
+              {t('sidebar.user_management')}
             </NavLink>
             <NavLink to="/dashboard" className={linkClass('alerts')}>
               <span className="text-lg">⚠️</span>
-              Public Alerts
+              {t('sidebar.public_alerts')}
             </NavLink>
             <NavLink to="/dashboard" className={linkClass('audit')}>
               <span className="text-lg">📊</span>
-              Audit Logs
+              {t('sidebar.audit_logs')}
             </NavLink>
           </>
         )}
@@ -123,15 +127,22 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user?.full_name}</p>
             <p className="text-xs text-base-content/60 capitalize truncate">
-              {user?.role}
+              {user?.role ? t(`role.${user.role}`) : ''}
             </p>
           </div>
         </div>
+
+        {/* Language Switcher + Theme Toggle */}
+        <div className="flex justify-center items-center gap-2 mt-3">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
+
         <button
           onClick={handleLogout}
           className="btn btn-outline btn-sm w-full mt-3"
         >
-          Logout
+          {t('nav.logout')}
         </button>
       </div>
     </aside>
