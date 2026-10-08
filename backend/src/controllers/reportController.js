@@ -41,7 +41,7 @@ exports.getMyReports = async (req, res) => {
   }
 };
 
-// GET /api/v1/reports/all  (officer/detective/admin only)
+// GET /api/v1/reports/all (staff only)
 exports.getAllReports = async (req, res) => {
   try {
     const reports = await Report.findAll({

@@ -59,7 +59,9 @@ exports.login = async (req, res) => {
     }
 
     if (user.is_locked) {
-      return res.status(403).json({ message: 'Account locked. Contact administrator.' });
+      return res
+        .status(403)
+        .json({ message: 'Account locked. Contact administrator.' });
     }
 
     const valid = await user.comparePassword(password);
@@ -72,7 +74,6 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Successful login → reset failed attempts
     user.failed_attempts = 0;
     await user.save();
 
@@ -109,4 +110,40 @@ exports.me = async (req, res) => {
       },
     },
   });
+};
+
+// PATCH /api/v1/auth/change-password
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: 'Current and new password required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const valid = await user.comparePassword(currentPassword);
+    if (!valid) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    user.password_hash = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

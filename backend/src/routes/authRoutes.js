@@ -7,7 +7,8 @@ const authenticate = require('../middleware/authenticate');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
-// Protected route
+// Protected routes
 router.get('/me', authenticate, authController.me);
+router.patch('/change-password', authenticate, authController.changePassword);
 
 module.exports = router;

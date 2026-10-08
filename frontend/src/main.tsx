@@ -8,13 +8,16 @@ import './index.css';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthProvider.tsx';
 import { ThemeProvider } from './context/ThemeProvider.tsx';
+import { SocketProvider } from './context/SocketProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <App />
+          <SocketProvider>
+            <App />
+          </SocketProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

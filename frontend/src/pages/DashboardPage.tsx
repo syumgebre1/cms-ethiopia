@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/useAuth';
-import { reportApi } from '../services/api';
+import { reportApi, messageApi } from '../services/api';
 import Sidebar from '../components/Sidebar';
 import type { Report } from '../types';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [messageError, setMessageError] = useState('');
 
   const isStaff =
     user?.role === 'officer' ||
@@ -49,6 +51,22 @@ export default function DashboardPage() {
     return t('dashboard.greeting_evening');
   };
 
+  // ==================== Message reporter ====================
+  const handleMessageReporter = async (report: Report) => {
+    if (!report.user_id) {
+      setMessageError('This report was submitted anonymously');
+      setTimeout(() => setMessageError(''), 3000);
+      return;
+    }
+    try {
+      const res = await messageApi.startConversation(report.user_id);
+      navigate(`/messages/${res.data.conversation.id}`);
+    } catch (err: any) {
+      setMessageError(err.response?.data?.message || 'Failed to start chat');
+      setTimeout(() => setMessageError(''), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-base-200 flex">
       <Sidebar activeItem="dashboard" />
@@ -85,6 +103,13 @@ export default function DashboardPage() {
 
         {/* Content */}
         <main className="p-4 lg:p-8">
+          {/* Message error toast */}
+          {messageError && (
+            <div className="alert alert-warning text-sm mb-4">
+              <span>{messageError}</span>
+            </div>
+          )}
+
           {/* Welcome hero */}
           <div className="card bg-gradient-to-r from-primary to-primary/70 text-white shadow-md p-6 mb-6">
             <div className="flex justify-between items-center flex-wrap gap-4">
@@ -135,9 +160,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-base-content/60 uppercase">
                     {t('dashboard.pending')}
                   </p>
-                  <p className="text-3xl font-bold text-warning mt-1">
-                    {pending}
-                  </p>
+                  <p className="text-3xl font-bold text-warning mt-1">{pending}</p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
                   ⏳
@@ -215,17 +238,37 @@ export default function DashboardPage() {
                       <tr>
                         <th>{t('dashboard.table_type')}</th>
                         <th>{t('dashboard.table_location')}</th>
+                        {isStaff && <th>Reporter</th>}
                         <th>{t('dashboard.table_urgency')}</th>
                         <th>{t('dashboard.table_status')}</th>
+                        {isStaff && <th>Actions</th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {reports.slice(0, 5).map((r) => (
+                      {reports.slice(0, 10).map((r) => (
                         <tr key={r.id} className="hover">
                           <td className="font-medium">{r.crime_type}</td>
                           <td className="text-base-content/70">
                             {r.location}
                           </td>
+                          {isStaff && (
+                            <td className="text-xs">
+                              {r.reporter ? (
+                                <div>
+                                  <p className="font-medium">
+                                    {r.reporter.full_name}
+                                  </p>
+                                  <p className="text-base-content/60">
+                                    {r.reporter.email}
+                                  </p>
+                                </div>
+                              ) : (
+                                <span className="badge badge-ghost badge-sm">
+                                  Anonymous
+                                </span>
+                              )}
+                            </td>
+                          )}
                           <td>
                             <span
                               className={`badge badge-sm ${
@@ -256,6 +299,22 @@ export default function DashboardPage() {
                               {t(`status.${r.status}`)}
                             </span>
                           </td>
+                          {isStaff && (
+                            <td>
+                              <button
+                                onClick={() => handleMessageReporter(r)}
+                                disabled={!r.user_id}
+                                className="btn btn-ghost btn-xs"
+                                title={
+                                  r.user_id
+                                    ? 'Message reporter'
+                                    : 'Anonymous report'
+                                }
+                              >
+                                💬
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -338,14 +397,20 @@ export default function DashboardPage() {
                     🚨 {t('dashboard.action_report')}
                   </Link>
                 )}
+                <Link
+                  to="/messages"
+                  className="btn btn-outline btn-sm w-full justify-start"
+                >
+                  💬 {t('dashboard.action_messages')}
+                </Link>
                 <button className="btn btn-outline btn-sm w-full justify-start">
                   📄 {t('dashboard.action_view_reports')}
                 </button>
-                <button className="btn btn-outline btn-sm w-full justify-start">
-                  💬 {t('dashboard.action_messages')}
-                </button>
                 {isAdmin && (
-                  <button className="btn btn-outline btn-sm w-full justify-start">
+                  <button
+                    onClick={() => navigate('/admin/users')}
+                    className="btn btn-outline btn-sm w-full justify-start"
+                  >
                     👥 {t('dashboard.action_manage_users')}
                   </button>
                 )}

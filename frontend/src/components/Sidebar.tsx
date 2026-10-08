@@ -86,7 +86,7 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           {t('sidebar.communication')}
         </p>
 
-        <NavLink to="/dashboard" className={linkClass('messages')}>
+        <NavLink to="/messages" className={linkClass('messages')}>
           <span className="text-lg">💬</span>
           {t('sidebar.messages')}
           <span className="badge badge-primary badge-xs ml-auto">3</span>
@@ -97,12 +97,21 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           {t('sidebar.notifications')}
         </NavLink>
 
+        <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-4 mb-1">
+          Account
+        </p>
+
+        <NavLink to="/profile" className={linkClass('profile')}>
+          <span className="text-lg">⚙️</span>
+          Profile
+        </NavLink>
+
         {isAdmin && (
           <>
             <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-4 mb-1">
               {t('sidebar.admin')}
             </p>
-            <NavLink to="/dashboard" className={linkClass('users')}>
+            <NavLink to="/admin/users" className={linkClass('users')}>
               <span className="text-lg">👥</span>
               {t('sidebar.user_management')}
             </NavLink>
