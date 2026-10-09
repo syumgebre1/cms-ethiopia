@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+import DashboardLayout from '../components/DashboardLayout';
+import EmptyState from '../components/EmptyState';
 import { useNotifications } from '../context/useNotifications';
 import type { AppNotification } from '../services/api';
 
@@ -49,21 +50,41 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex">
-      <Sidebar activeItem="notifications" />
-
-      <div className="flex-1 min-w-0">
-        <header className="bg-base-100 border-b border-base-300 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+    <DashboardLayout
+      activeItem="notifications"
+      title="Notifications"
+      actions={
+        unreadCount > 0 ? (
+          <button
+            onClick={markAllRead}
+            className="btn btn-ghost btn-xs"
+            title="Mark all as read"
+          >
+            ✓ All
+          </button>
+        ) : null
+      }
+    >
+      <div className="p-4 lg:p-8 max-w-4xl mx-auto">
+        {/* Desktop header */}
+        <div className="hidden lg:flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-lg font-bold">Notifications</h1>
-            <p className="text-xs text-base-content/60">
-              {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+            <h1 className="text-2xl font-bold">Notifications</h1>
+            <p className="text-sm text-base-content/60">
+              {unreadCount > 0
+                ? `${unreadCount} unread notification${
+                    unreadCount !== 1 ? 's' : ''
+                  }`
+                : 'All caught up'}
             </p>
           </div>
 
           <div className="flex gap-2">
             {unreadCount > 0 && (
-              <button onClick={markAllRead} className="btn btn-ghost btn-sm">
+              <button
+                onClick={markAllRead}
+                className="btn btn-ghost btn-sm"
+              >
                 Mark all read
               </button>
             )}
@@ -78,74 +99,75 @@ export default function NotificationsPage() {
               </button>
             )}
           </div>
-        </header>
+        </div>
 
-        <main className="p-4 lg:p-8 max-w-4xl">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <span className="loading loading-spinner loading-lg"></span>
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="card bg-base-100 shadow-sm p-12 text-center">
-              <p className="text-5xl mb-4">🔔</p>
-              <p className="font-medium">No notifications yet</p>
-              <p className="text-sm text-base-content/60 mt-1">
-                You'll see reports, messages, and alerts here
-              </p>
-            </div>
-          ) : (
-            <div className="card bg-base-100 shadow-sm">
-              <ul className="divide-y divide-base-300">
-                {notifications.map((n) => (
-                  <li
-                    key={n.id}
-                    className={`flex gap-3 p-4 hover:bg-base-200 transition cursor-pointer ${
-                      !n.is_read ? 'bg-primary/5' : ''
-                    }`}
-                    onClick={() => handleClick(n)}
-                  >
-                    <span className="text-2xl shrink-0">
-                      {iconFor(n.type)}
-                    </span>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <span className="loading loading-spinner loading-lg"></span>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="card bg-base-100 shadow-sm">
+            <EmptyState
+              icon="🔔"
+              title="You're all caught up!"
+              description="You'll see updates here when there's activity on your reports, new messages arrive, or public alerts are published."
+              actionLabel="Back to Dashboard"
+              actionLink="/dashboard"
+              variant="card"
+            />
+          </div>
+        ) : (
+          <div className="card bg-base-100 shadow-sm">
+            <ul className="divide-y divide-base-300">
+              {notifications.map((n) => (
+                <li
+                  key={n.id}
+                  className={`flex gap-3 p-4 hover:bg-base-200 transition cursor-pointer ${
+                    !n.is_read ? 'bg-primary/5' : ''
+                  }`}
+                  onClick={() => handleClick(n)}
+                >
+                  <span className="text-2xl shrink-0">
+                    {iconFor(n.type)}
+                  </span>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-medium text-sm">
-                          {n.title}
-                          {!n.is_read && (
-                            <span className="ml-2 badge badge-primary badge-xs">
-                              new
-                            </span>
-                          )}
-                        </p>
-                        <span className="text-xs text-base-content/50 shrink-0">
-                          {timeAgo(n.createdAt)}
-                        </span>
-                      </div>
-                      {n.body && (
-                        <p className="text-sm text-base-content/70 mt-1">
-                          {n.body}
-                        </p>
-                      )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium text-sm">
+                        {n.title}
+                        {!n.is_read && (
+                          <span className="ml-2 badge badge-primary badge-xs">
+                            new
+                          </span>
+                        )}
+                      </p>
+                      <span className="text-xs text-base-content/50 shrink-0">
+                        {timeAgo(n.createdAt)}
+                      </span>
                     </div>
+                    {n.body && (
+                      <p className="text-sm text-base-content/70 mt-1">
+                        {n.body}
+                      </p>
+                    )}
+                  </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        remove(n.id);
-                      }}
-                      className="btn btn-ghost btn-xs"
-                      title="Dismiss"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </main>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      remove(n.id);
+                    }}
+                    className="btn btn-ghost btn-xs"
+                    title="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

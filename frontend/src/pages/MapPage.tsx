@@ -8,14 +8,13 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useTranslation } from 'react-i18next';
-import Sidebar from '../components/Sidebar';
+import DashboardLayout from '../components/DashboardLayout';
+import EmptyState from '../components/EmptyState';
 import { reportApi } from '../services/api';
 import { useAuth } from '../context/useAuth';
 import type { Report } from '../types';
 
-// ==================== ETHIOPIAN LOCATIONS DATABASE ====================
 const CITY_COORDS: Record<string, [number, number]> = {
-  // ========== REGIONAL CAPITALS ==========
   'Addis Ababa': [9.032, 38.7469],
   Adama: [8.54, 39.2694],
   'Bahir Dar': [11.5936, 37.3908],
@@ -32,8 +31,6 @@ const CITY_COORDS: Record<string, [number, number]> = {
   Assosa: [10.0667, 34.5333],
   Bishoftu: [8.75, 38.9833],
   'Addis Zemen': [12.1167, 37.7833],
-
-  // ========== MAJOR CITIES ==========
   Shashamane: [7.2, 38.6],
   Nekemte: [9.0833, 36.55],
   Ambo: [8.9833, 37.85],
@@ -105,8 +102,6 @@ const CITY_COORDS: Record<string, [number, number]> = {
   Asosa: [10.0667, 34.5333],
   Pawe: [11.2, 36.4],
   Bambasi: [9.7667, 34.6],
-
-  // ========== ADDIS ABABA NEIGHBORHOODS ==========
   Bole: [9.01, 38.78],
   'Meskel Square': [9.0107, 38.7614],
   Piassa: [9.035, 38.75],
@@ -156,7 +151,6 @@ const CITY_COORDS: Record<string, [number, number]> = {
   'Meskel Flower': [9.0167, 38.7833],
 };
 
-// Deterministic pseudo-random offset from report ID
 const hashCode = (str: string): number => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -166,39 +160,29 @@ const hashCode = (str: string): number => {
   return Math.abs(hash);
 };
 
-// Match longest key first so "Meskel Square" beats "Meskel"
 const findCoords = (location: string): [number, number] | null => {
   if (!location) return null;
   const lower = location.toLowerCase().trim();
-
   const sortedKeys = Object.keys(CITY_COORDS).sort(
     (a, b) => b.length - a.length
   );
-
   for (const key of sortedKeys) {
     if (lower.includes(key.toLowerCase())) {
       return CITY_COORDS[key];
     }
   }
-
   return null;
 };
 
-// Prefer real GPS, fall back to text match
 const getReportCoords = (report: Report): [number, number] | null => {
-  // 1. If report has real GPS coordinates, use them
   if (report.latitude && report.longitude) {
     return [Number(report.latitude), Number(report.longitude)];
   }
-
-  // 2. Otherwise, use text matching with jitter
   const matched = findCoords(report.location);
   if (!matched) return null;
-
   const hash = hashCode(report.id);
   const jitterLat = ((hash % 200) - 100) / 5000;
   const jitterLng = (((hash >> 8) % 200) - 100) / 5000;
-
   return [matched[0] + jitterLat, matched[1] + jitterLng];
 };
 
@@ -215,7 +199,6 @@ export default function MapPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -261,17 +244,26 @@ export default function MapPage() {
     }
   };
 
-  // Stats for header
-  const totalWithCoords = reports.filter((r) => getReportCoords(r) !== null)
-    .length;
+  const totalWithCoords = reports.filter(
+    (r) => getReportCoords(r) !== null
+  ).length;
   const gpsCount = reports.filter((r) => r.latitude && r.longitude).length;
 
   return (
-    <div className="min-h-screen bg-base-200 flex">
-      <Sidebar activeItem="map" />
-
-      <div className="flex-1 min-w-0 flex flex-col h-screen">
-        <header className="bg-base-100 border-b border-base-300 px-6 py-3 flex flex-wrap justify-between items-center gap-3 z-10">
+    <DashboardLayout
+      activeItem="map"
+      title="Crime Map"
+      actions={
+        !loading && reports.length > 0 ? (
+          <span className="text-xs text-base-content/60 hidden md:inline">
+            {filteredReports.length} shown · {gpsCount} GPS
+          </span>
+        ) : null
+      }
+    >
+      <div className="flex flex-col h-[calc(100vh-56px)] lg:h-screen">
+        {/* Desktop header with filters */}
+        <div className="hidden lg:flex bg-base-100 border-b border-base-300 px-6 py-3 justify-between items-center gap-3">
           <div>
             <h1 className="text-lg font-bold">Crime Map</h1>
             <p className="text-xs text-base-content/60">
@@ -283,7 +275,7 @@ export default function MapPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             <select
               value={urgencyFilter}
               onChange={(e) => setUrgencyFilter(e.target.value)}
@@ -309,7 +301,35 @@ export default function MapPage() {
               <option value="rejected">Rejected</option>
             </select>
           </div>
-        </header>
+        </div>
+
+        {/* Mobile filters */}
+        <div className="lg:hidden bg-base-100 border-b border-base-300 px-3 py-2 flex gap-2">
+          <select
+            value={urgencyFilter}
+            onChange={(e) => setUrgencyFilter(e.target.value)}
+            className="select select-bordered select-xs flex-1"
+          >
+            <option value="all">Urgency</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="select select-bordered select-xs flex-1"
+          >
+            <option value="all">Status</option>
+            <option value="pending">Pending</option>
+            <option value="under_review">Review</option>
+            <option value="escalated">Escalated</option>
+            <option value="resolved">Resolved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
 
         {error && (
           <div className="alert alert-error text-sm m-4">
@@ -317,149 +337,150 @@ export default function MapPage() {
           </div>
         )}
 
+        {/* Map area */}
         <div className="flex-1 relative">
           {loading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-base-200 z-20">
               <span className="loading loading-spinner loading-lg"></span>
             </div>
+          ) : reports.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-base-200">
+              <div className="max-w-md">
+                <EmptyState
+                  icon="🗺️"
+                  title="No crime data on the map yet"
+                  description={
+                    isStaff
+                      ? "When citizens submit reports, they'll appear here as colored pins based on their location. Reports with GPS coordinates are shown with a white ring."
+                      : "Once you submit a crime report, it will appear here on the map. Reports with GPS coordinates are shown with a white ring."
+                  }
+                  actionLabel={!isStaff ? '🚨 Report a Crime' : undefined}
+                  actionLink={!isStaff ? '/report' : undefined}
+                />
+              </div>
+            </div>
           ) : (
-            <MapContainer
-              center={[9.032, 38.7469]}
-              zoom={7}
-              style={{ height: '100%', width: '100%' }}
-              scrollWheelZoom={true}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+            <>
+              <MapContainer
+                center={[9.032, 38.7469]}
+                zoom={7}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
 
-              {filteredReports.map((report) => {
-                const coords = getReportCoords(report);
-                if (!coords) return null;
+                {filteredReports.map((report) => {
+                  const coords = getReportCoords(report);
+                  if (!coords) return null;
 
-                const color = URGENCY_COLORS[report.urgency] || '#6b7280';
-                const hasRealGPS = Boolean(report.latitude && report.longitude);
+                  const color = URGENCY_COLORS[report.urgency] || '#6b7280';
+                  const hasRealGPS = Boolean(
+                    report.latitude && report.longitude
+                  );
 
-                return (
-                  <CircleMarker
-                    key={report.id}
-                    center={coords}
-                    radius={hasRealGPS ? 12 : 10}
-                    pathOptions={{
-                      color: hasRealGPS ? '#ffffff' : color,
-                      fillColor: color,
-                      fillOpacity: 0.9,
-                      weight: hasRealGPS ? 3 : 2,
-                    }}
-                  >
-                    <Popup>
-                      <div className="min-w-[220px]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span
-                            className="w-3 h-3 rounded-full inline-block"
-                            style={{ backgroundColor: color }}
-                          ></span>
-                          <strong className="text-base">
-                            {report.crime_type}
-                          </strong>
-                          {hasRealGPS && (
-                            <span className="badge badge-success badge-xs">
-                              GPS
+                  return (
+                    <CircleMarker
+                      key={report.id}
+                      center={coords}
+                      radius={hasRealGPS ? 12 : 10}
+                      pathOptions={{
+                        color: hasRealGPS ? '#ffffff' : color,
+                        fillColor: color,
+                        fillOpacity: 0.9,
+                        weight: hasRealGPS ? 3 : 2,
+                      }}
+                    >
+                      <Popup>
+                        <div className="min-w-[220px]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span
+                              className="w-3 h-3 rounded-full inline-block"
+                              style={{ backgroundColor: color }}
+                            ></span>
+                            <strong className="text-base">
+                              {report.crime_type}
+                            </strong>
+                            {hasRealGPS && (
+                              <span className="badge badge-success badge-xs">
+                                GPS
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs mb-1">
+                            📍 {report.location}
+                          </p>
+                          <p className="text-xs mb-2">
+                            {report.description.slice(0, 80)}
+                            {report.description.length > 80 ? '...' : ''}
+                          </p>
+
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            <span
+                              className={`badge badge-xs ${getStatusColor(
+                                report.status
+                              )}`}
+                            >
+                              {report.status}
                             </span>
-                          )}
-                        </div>
+                            <span className="badge badge-xs badge-ghost">
+                              {report.urgency}
+                            </span>
+                          </div>
 
-                        <p className="text-xs mb-1">
-                          📍 {report.location}
-                        </p>
-                        <p className="text-xs mb-2">
-                          {report.description.slice(0, 80)}
-                          {report.description.length > 80 ? '...' : ''}
-                        </p>
-
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          <span
-                            className={`badge badge-xs ${getStatusColor(
-                              report.status
-                            )}`}
+                          <Link
+                            to={`/reports/${report.id}`}
+                            className="btn btn-primary btn-xs w-full mt-1"
                           >
-                            {report.status}
-                          </span>
-                          <span className="badge badge-xs badge-ghost">
-                            {report.urgency}
-                          </span>
+                            View Details →
+                          </Link>
                         </div>
+                      </Popup>
+                    </CircleMarker>
+                  );
+                })}
+              </MapContainer>
 
-                        <Link
-                          to={`/reports/${report.id}`}
-                          className="btn btn-primary btn-xs w-full mt-1"
-                        >
-                          View Details →
-                        </Link>
-                      </div>
-                    </Popup>
-                  </CircleMarker>
-                );
-              })}
-            </MapContainer>
+              {/* Legend */}
+              <div className="absolute bottom-4 right-4 bg-base-100 rounded-lg shadow-lg p-3 z-[1000] text-xs max-w-[140px]">
+                <p className="font-bold mb-2">Urgency</p>
+                <div className="space-y-1">
+                  {Object.entries(URGENCY_COLORS).map(([key, color]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <span
+                        className="w-3 h-3 rounded-full inline-block"
+                        style={{ backgroundColor: color }}
+                      ></span>
+                      <span className="capitalize">{key}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="divider my-2"></div>
+                <p className="font-bold mb-2">Location</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-3 h-3 rounded-full inline-block border-2 border-white"
+                      style={{ backgroundColor: '#6b7280' }}
+                    ></span>
+                    <span>Exact GPS</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-3 h-3 rounded-full inline-block"
+                      style={{ backgroundColor: '#6b7280' }}
+                    ></span>
+                    <span>Approximate</span>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
-
-          <div className="absolute bottom-6 right-6 bg-base-100 rounded-lg shadow-lg p-3 z-[1000] text-xs">
-            <p className="font-bold mb-2">Urgency Legend</p>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full inline-block"
-                  style={{ backgroundColor: URGENCY_COLORS.low }}
-                ></span>
-                <span>Low</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full inline-block"
-                  style={{ backgroundColor: URGENCY_COLORS.medium }}
-                ></span>
-                <span>Medium</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full inline-block"
-                  style={{ backgroundColor: URGENCY_COLORS.high }}
-                ></span>
-                <span>High</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full inline-block"
-                  style={{ backgroundColor: URGENCY_COLORS.critical }}
-                ></span>
-                <span>Critical</span>
-              </div>
-            </div>
-
-            <div className="divider my-2"></div>
-
-            <p className="font-bold mb-2">Location</p>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full inline-block border-2 border-white"
-                  style={{ backgroundColor: '#6b7280' }}
-                ></span>
-                <span>Exact GPS</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="w-3 h-3 rounded-full inline-block"
-                  style={{ backgroundColor: '#6b7280' }}
-                ></span>
-                <span>Approximate</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
