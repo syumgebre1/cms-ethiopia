@@ -9,8 +9,11 @@ import type {
 } from '../types';
 
 // ==================== Axios Instance ====================
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'https://cms-ethiopia.onrender.com/api/v1';
+
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api/v1',
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -394,7 +397,6 @@ export const alertApi = {
   },
 };
 
-export default API;
 // ==================== Notification Types ====================
 export type NotificationType =
   | 'report_created'
@@ -443,3 +445,5 @@ export const notificationApi = {
     return res.data;
   },
 };
+
+export default API;

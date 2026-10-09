@@ -7,7 +7,8 @@ interface Props {
   children: ReactNode;
 }
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL || 'https://cms-ethiopia.onrender.com';
 
 export function SocketProvider({ children }: Props) {
   const { user, token } = useAuth();
@@ -16,7 +17,6 @@ export function SocketProvider({ children }: Props) {
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Only connect when logged in
     if (!user || !token) {
       if (socket) {
         socket.disconnect();
@@ -46,7 +46,6 @@ export function SocketProvider({ children }: Props) {
       setIsConnected(false);
     });
 
-    // Presence tracking
     newSocket.on('presence:online', ({ userId }: { userId: string }) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev);
