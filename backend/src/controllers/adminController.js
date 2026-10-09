@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const { User, Conversation, Message } = require('../models');
+const { notify } = require('../utils/notify');
 
 // POST /api/v1/admin/users
 exports.createUser = async (req, res) => {
@@ -39,6 +40,7 @@ exports.createUser = async (req, res) => {
           email: user.email,
           full_name: user.full_name,
           role: user.role,
+          is_verified: user.is_verified,
         },
       },
     });
@@ -61,7 +63,10 @@ exports.listUsers = async (req, res) => {
         'is_locked',
         'createdAt',
       ],
-      order: [['createdAt', 'DESC']],
+      order: [
+        ['is_verified', 'ASC'],
+        ['createdAt', 'DESC'],
+      ],
     });
 
     res.json({ data: { users } });
@@ -90,6 +95,77 @@ exports.updateUser = async (req, res) => {
 
     await user.save();
     res.json({ message: 'User updated', data: { user } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /api/v1/admin/users/:id/approve
+exports.approveUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.is_verified) {
+      return res.status(400).json({ message: 'User is already approved' });
+    }
+
+    user.is_verified = true;
+    await user.save();
+
+    // Send notification to the user
+    const io = req.app.get('io');
+    if (io) {
+      await notify(io, user.id, {
+        type: 'account_created',
+        title: 'Account Approved! ✅',
+        body: 'Your account has been approved by the police department. You can now report crimes and contact officers.',
+        link: '/dashboard',
+      });
+    }
+
+    res.json({
+      message: `${user.full_name} has been approved`,
+      data: { user },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// DELETE /api/v1/admin/users/:id/reject
+exports.rejectUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (id === req.user.id) {
+      return res.status(400).json({ message: 'Cannot reject yourself' });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Only reject unapproved citizens
+    if (user.role !== 'citizen') {
+      return res
+        .status(400)
+        .json({ message: 'Can only reject citizen accounts' });
+    }
+
+    if (user.is_verified) {
+      return res
+        .status(400)
+        .json({ message: 'Cannot reject an approved user' });
+    }
+
+    const name = user.full_name;
+    await user.destroy();
+
+    res.json({
+      message: `Registration for ${name} was rejected and the account was deleted`,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -180,7 +256,6 @@ exports.listAllConversations = async (req, res) => {
       })
     );
 
-    // Optional search filter
     let filtered = result;
     if (search && search.trim()) {
       const q = search.toLowerCase();

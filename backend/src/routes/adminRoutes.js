@@ -10,6 +10,8 @@ router.use(authenticate, authorize('admin'));
 router.post('/users', adminController.createUser);
 router.get('/users', adminController.listUsers);
 router.patch('/users/:id', adminController.updateUser);
+router.patch('/users/:id/approve', adminController.approveUser);
+router.delete('/users/:id/reject', adminController.rejectUser);
 router.delete('/users/:id', adminController.deleteUser);
 router.patch('/users/:id/reset-password', adminController.resetPassword);
 

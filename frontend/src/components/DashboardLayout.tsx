@@ -1,7 +1,7 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import VerifyEmailBanner from './VerifyEmailBanner';
+import PendingApprovalBanner from './PendingApprovalBanner';
 
 interface Props {
   children: ReactNode;
@@ -87,8 +87,8 @@ export default function DashboardLayout({
           {actions && <div className="flex gap-2">{actions}</div>}
         </header>
 
-        {/* Verify email banner */}
-        <VerifyEmailBanner />
+        {/* Pending approval banner */}
+        <PendingApprovalBanner />
 
         {/* Page content */}
         <div className="flex-1 min-w-0">{children}</div>

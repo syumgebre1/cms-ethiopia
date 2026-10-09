@@ -44,18 +44,22 @@ export default function ReportCrimePage() {
         <div className="p-4 lg:p-8 max-w-2xl mx-auto">
           <div className="card bg-base-100 shadow-sm p-8 text-center">
             <div className="w-20 h-20 rounded-full bg-warning/20 flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">🔒</span>
+              <span className="text-4xl">⏳</span>
             </div>
             <h2 className="text-2xl font-bold mb-2">
-              Verify your email to continue
+              Awaiting admin approval
             </h2>
             <p className="text-base-content/70 mb-6 max-w-md mx-auto">
-              For security and accountability, crime reports can only be
-              submitted by verified users. This helps us prevent spam and
-              ensures officers can reach you if needed.
+              Your account is currently under review by the police department.
+              Once approved, you'll be able to submit crime reports and contact
+              officers directly.
             </p>
-            <Link to="/verify-email" className="btn btn-primary">
-              📧 Verify Email Now
+            <p className="text-xs text-base-content/50 mb-6">
+              This usually takes less than 24 hours. You'll receive a
+              notification when approved.
+            </p>
+            <Link to="/dashboard" className="btn btn-primary">
+              Back to Dashboard
             </Link>
           </div>
         </div>

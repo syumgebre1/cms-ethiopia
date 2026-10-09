@@ -239,6 +239,16 @@ export const adminApi = {
     });
     return res.data;
   },
+    approveUser: async (
+    id: string
+  ): Promise<{ message: string; data: { user: AdminUser } }> => {
+    const res = await API.patch(`/admin/users/${id}/approve`);
+    return res.data;
+  },
+  rejectUser: async (id: string): Promise<{ message: string }> => {
+    const res = await API.delete(`/admin/users/${id}/reject`);
+    return res.data;
+  },
   listAllConversations: async (
     search?: string
   ): Promise<{ data: { conversations: AuditConversation[] } }> => {

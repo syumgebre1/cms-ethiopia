@@ -17,19 +17,22 @@ exports.register = async (req, res) => {
       return res.status(409).json({ message: 'Email already registered' });
     }
 
+    // Citizens start unverified — admins approve them
     const user = await User.create({
       email,
       password_hash: password,
       full_name,
       phone,
       national_id,
+      role: 'citizen',
+      is_verified: false,
     });
 
     const accessToken = signAccessToken(user.id);
     const refreshToken = signRefreshToken(user.id);
 
     res.status(201).json({
-      message: 'Registered successfully',
+      message: 'Registered successfully. Awaiting admin approval.',
       data: {
         user: {
           id: user.id,
@@ -39,6 +42,7 @@ exports.register = async (req, res) => {
           phone: user.phone,
           national_id: user.national_id,
           avatar_url: user.avatar_url,
+          is_verified: user.is_verified,
         },
         accessToken,
         refreshToken,
@@ -96,6 +100,7 @@ exports.login = async (req, res) => {
           phone: user.phone,
           national_id: user.national_id,
           avatar_url: user.avatar_url,
+          is_verified: user.is_verified,
         },
         accessToken,
         refreshToken,
@@ -121,6 +126,7 @@ exports.me = async (req, res) => {
         phone: user.phone,
         national_id: user.national_id,
         avatar_url: user.avatar_url,
+        is_verified: user.is_verified,
       },
     },
   });
@@ -194,6 +200,7 @@ exports.updateProfile = async (req, res) => {
           phone: user.phone,
           national_id: user.national_id,
           avatar_url: user.avatar_url,
+          is_verified: user.is_verified,
         },
       },
     });
@@ -214,7 +221,6 @@ exports.uploadAvatar = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Delete old avatar if exists
     if (user.avatar_url) {
       const oldPath = path.join(
         __dirname,
@@ -244,6 +250,7 @@ exports.uploadAvatar = async (req, res) => {
           phone: user.phone,
           national_id: user.national_id,
           avatar_url: user.avatar_url,
+          is_verified: user.is_verified,
         },
       },
     });
