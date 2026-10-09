@@ -7,8 +7,8 @@ import { useAuth } from '../context/useAuth';
 import { downloadReportPdf } from '../utils/reportPdf';
 import type { Report } from '../types';
 
-const API_BASE = 'http://localhost:5000';
-const PROD_API_BASE = 'https://cms-ethiopia.onrender.com';
+const API_BASE =
+  import.meta.env.VITE_SOCKET_URL || 'https://cms-ethiopia.onrender.com';
 
 const URGENCY_BADGE: Record<string, string> = {
   low: 'badge-ghost',
@@ -37,7 +37,6 @@ export default function ReportDetailPage() {
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(false);
 
-  // Evidence upload
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
@@ -45,9 +44,6 @@ export default function ReportDetailPage() {
     user?.role === 'officer' ||
     user?.role === 'detective' ||
     user?.role === 'admin';
-
-  const API_URL =
-    import.meta.env.VITE_API_URL?.replace('/api/v1', '') || PROD_API_BASE;
 
   const load = async () => {
     if (!id) return;
@@ -115,7 +111,7 @@ export default function ReportDetailPage() {
     }
   };
 
-  const getFileUrl = (url: string) => `${API_URL}${url}`;
+  const getFileUrl = (url: string) => `${API_BASE}${url}`;
 
   const formatSize = (bytes: number | null) => {
     if (!bytes) return '';
@@ -293,7 +289,7 @@ export default function ReportDetailPage() {
           )}
         </div>
 
-        {/* ==================== EVIDENCE ==================== */}
+        {/* Evidence */}
         <div className="card bg-base-100 shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">

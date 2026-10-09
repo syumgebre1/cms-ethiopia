@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { alertApi, type PublicAlert, type AlertType } from '../services/api';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE =
+  import.meta.env.VITE_SOCKET_URL || 'https://cms-ethiopia.onrender.com';
 
 const TYPE_TABS: { value: AlertType | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -35,7 +36,6 @@ export default function PublicAlertsSection() {
     load();
   }, []);
 
-  // Filter by type + search
   useEffect(() => {
     let result = alerts;
     if (activeTab !== 'all') {
@@ -70,7 +70,6 @@ export default function PublicAlertsSection() {
   return (
     <section className="bg-base-200 py-16 px-4 lg:px-16">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-3xl lg:text-4xl font-bold text-base-content">
             Public Safety Alerts
@@ -81,7 +80,6 @@ export default function PublicAlertsSection() {
           </p>
         </div>
 
-        {/* Tabs + Search */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div className="tabs tabs-boxed bg-base-100">
             {TYPE_TABS.map((tab) => (
@@ -108,7 +106,6 @@ export default function PublicAlertsSection() {
           </div>
         </div>
 
-        {/* Content */}
         {loading ? (
           <div className="flex justify-center py-12">
             <span className="loading loading-spinner loading-lg"></span>
@@ -130,7 +127,6 @@ export default function PublicAlertsSection() {
                   onClick={() => setSelected(alert)}
                   className="card bg-base-100 shadow-md hover:shadow-xl transition overflow-hidden text-left"
                 >
-                  {/* Photo + status badge */}
                   <div className="relative aspect-[4/5] bg-base-300 overflow-hidden">
                     {alert.photo_url ? (
                       <img
@@ -159,7 +155,6 @@ export default function PublicAlertsSection() {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="p-3">
                     <p className="font-bold text-sm truncate">
                       {alert.full_name || alert.title}
@@ -185,7 +180,6 @@ export default function PublicAlertsSection() {
         )}
       </div>
 
-      {/* Detail Modal */}
       {selected && (
         <div className="modal modal-open">
           <div className="modal-box max-w-2xl">

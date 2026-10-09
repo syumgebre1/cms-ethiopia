@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import Sidebar from '../components/Sidebar';
+import DashboardLayout from '../components/DashboardLayout';
 import {
   alertApi,
   type PublicAlert,
@@ -9,7 +9,8 @@ import {
 } from '../services/api';
 import { useAuth } from '../context/useAuth';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE =
+  import.meta.env.VITE_SOCKET_URL || 'https://cms-ethiopia.onrender.com';
 
 const TYPE_OPTIONS: { value: AlertType; label: string; emoji: string }[] = [
   { value: 'fugitive', label: 'Fugitive', emoji: '🕵️' },
@@ -35,7 +36,6 @@ export default function AlertsManagementPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Form state
   const [formType, setFormType] = useState<AlertType>('fugitive');
   const [formTitle, setFormTitle] = useState('');
   const [formName, setFormName] = useState('');
@@ -192,132 +192,133 @@ export default function AlertsManagementPage() {
     a.posted_by === user?.id || user?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-base-200 flex">
-      <Sidebar activeItem="alerts" />
-
-      <div className="flex-1 min-w-0">
-        <header className="bg-base-100 border-b border-base-300 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+    <DashboardLayout
+      activeItem="alerts"
+      title="Public Alerts"
+      actions={
+        <button onClick={openCreate} className="btn btn-primary btn-sm">
+          + Add
+        </button>
+      }
+    >
+      <div className="p-4 lg:p-6">
+        <div className="hidden lg:flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-lg font-bold">Public Alerts</h1>
-            <p className="text-xs text-base-content/60">
+            <h1 className="text-2xl font-bold">Public Alerts</h1>
+            <p className="text-sm text-base-content/60">
               Manage fugitives, missing persons, and announcements
             </p>
           </div>
           <button onClick={openCreate} className="btn btn-primary btn-sm">
             + Add Alert
           </button>
-        </header>
+        </div>
 
-        <main className="p-4 lg:p-6">
-          {error && (
-            <div className="alert alert-error text-sm mb-4">
-              <span>{error}</span>
+        {error && (
+          <div className="alert alert-error text-sm mb-4">
+            <span>{error}</span>
+          </div>
+        )}
+
+        <div className="card bg-base-100 shadow-sm">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <span className="loading loading-spinner loading-lg"></span>
+            </div>
+          ) : alerts.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-5xl mb-3">📢</p>
+              <p className="font-medium">No alerts yet</p>
+              <p className="text-sm text-base-content/60 mt-1">
+                Click "+ Add Alert" to create one
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Photo</th>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th className="hidden md:table-cell">Name</th>
+                    <th>Status</th>
+                    <th className="hidden lg:table-cell">Posted By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alerts.map((a) => (
+                    <tr key={a.id} className="hover">
+                      <td>
+                        {a.photo_url ? (
+                          <img
+                            src={`${API_BASE}${a.photo_url}`}
+                            alt={a.title}
+                            className="w-12 h-12 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded bg-base-200 flex items-center justify-center text-xs text-base-content/50">
+                            —
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge badge-sm ${typeBadgeColor(a.type)}`}
+                        >
+                          {a.type}
+                        </span>
+                      </td>
+                      <td className="font-medium max-w-xs truncate">
+                        {a.title}
+                      </td>
+                      <td className="text-sm text-base-content/70 hidden md:table-cell">
+                        {a.full_name || '—'}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge badge-sm ${statusBadgeColor(
+                            a.status
+                          )}`}
+                        >
+                          {a.status}
+                        </span>
+                      </td>
+                      <td className="text-xs text-base-content/60 hidden lg:table-cell">
+                        {a.poster?.full_name || 'Unknown'}
+                      </td>
+                      <td>
+                        <div className="flex gap-1">
+                          {canEdit(a) && (
+                            <>
+                              <button
+                                onClick={() => openEdit(a)}
+                                className="btn btn-ghost btn-xs"
+                                title="Edit"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDelete(a)}
+                                className="btn btn-ghost btn-xs text-error"
+                                title="Delete"
+                              >
+                                🗑️
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
-
-          <div className="card bg-base-100 shadow-sm">
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <span className="loading loading-spinner loading-lg"></span>
-              </div>
-            ) : alerts.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-5xl mb-3">📢</p>
-                <p className="font-medium">No alerts yet</p>
-                <p className="text-sm text-base-content/60 mt-1">
-                  Click "+ Add Alert" to create one
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Photo</th>
-                      <th>Type</th>
-                      <th>Title</th>
-                      <th>Name</th>
-                      <th>Status</th>
-                      <th>Posted By</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {alerts.map((a) => (
-                      <tr key={a.id} className="hover">
-                        <td>
-                          {a.photo_url ? (
-                            <img
-                              src={`${API_BASE}${a.photo_url}`}
-                              alt={a.title}
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded bg-base-200 flex items-center justify-center text-xs text-base-content/50">
-                              —
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge badge-sm ${typeBadgeColor(
-                              a.type
-                            )}`}
-                          >
-                            {a.type}
-                          </span>
-                        </td>
-                        <td className="font-medium max-w-xs truncate">
-                          {a.title}
-                        </td>
-                        <td className="text-sm text-base-content/70">
-                          {a.full_name || '—'}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge badge-sm ${statusBadgeColor(
-                              a.status
-                            )}`}
-                          >
-                            {a.status}
-                          </span>
-                        </td>
-                        <td className="text-xs text-base-content/60">
-                          {a.poster?.full_name || 'Unknown'}
-                        </td>
-                        <td>
-                          <div className="flex gap-1">
-                            {canEdit(a) && (
-                              <>
-                                <button
-                                  onClick={() => openEdit(a)}
-                                  className="btn btn-ghost btn-xs"
-                                  title="Edit"
-                                >
-                                  ✏️
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(a)}
-                                  className="btn btn-ghost btn-xs text-error"
-                                  title="Delete"
-                                >
-                                  🗑️
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </main>
+        </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal modal-open">
           <div className="modal-box max-w-2xl">
@@ -333,9 +334,7 @@ export default function AlertsManagementPage() {
                   </label>
                   <select
                     value={formType}
-                    onChange={(e) =>
-                      setFormType(e.target.value as AlertType)
-                    }
+                    onChange={(e) => setFormType(e.target.value as AlertType)}
                     className="select select-bordered w-full"
                   >
                     {TYPE_OPTIONS.map((o) => (
@@ -368,9 +367,7 @@ export default function AlertsManagementPage() {
 
               <div>
                 <label className="label py-1">
-                  <span className="label-text font-medium">
-                    Title *
-                  </span>
+                  <span className="label-text font-medium">Title *</span>
                 </label>
                 <input
                   type="text"
@@ -384,9 +381,7 @@ export default function AlertsManagementPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="md:col-span-2">
                   <label className="label py-1">
-                    <span className="label-text font-medium">
-                      Full Name
-                    </span>
+                    <span className="label-text font-medium">Full Name</span>
                   </label>
                   <input
                     type="text"
@@ -459,9 +454,7 @@ export default function AlertsManagementPage() {
 
               <div>
                 <label className="label py-1">
-                  <span className="label-text font-medium">
-                    Photo
-                  </span>
+                  <span className="label-text font-medium">Photo</span>
                 </label>
                 <input
                   type="file"
@@ -517,6 +510,6 @@ export default function AlertsManagementPage() {
           ></div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
