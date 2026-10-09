@@ -14,21 +14,22 @@ export function AuthProvider({ children }: Props) {
   );
   const [loading, setLoading] = useState<boolean>(true);
 
-  // ==================== Logout ====================
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
   }, []);
 
-  // ==================== Login ====================
   const login = useCallback((userData: User, authToken: string) => {
     setUser(userData);
     setToken(authToken);
     localStorage.setItem('token', authToken);
   }, []);
 
-  // ==================== Auto-fetch user on reload ====================
+  const updateUser = useCallback((userData: User) => {
+    setUser(userData);
+  }, []);
+
   useEffect(() => {
     const init = async () => {
       if (!token) {
@@ -49,7 +50,9 @@ export function AuthProvider({ children }: Props) {
   }, [token, logout]);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, login, logout, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

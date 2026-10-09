@@ -5,6 +5,9 @@ export interface User {
   email: string;
   full_name: string;
   role: UserRole;
+  phone?: string | null;
+  national_id?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface LoginInput {
@@ -35,6 +38,7 @@ export interface AuthContextType {
   loading: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  updateUser: (user: User) => void;
 }
 
 export type Urgency = 'low' | 'medium' | 'high' | 'critical';

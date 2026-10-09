@@ -8,6 +8,7 @@ import type {
   User,
 } from '../types';
 
+// ==================== Axios Instance ====================
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'https://cms-ethiopia.onrender.com/api/v1';
 
@@ -16,6 +17,7 @@ const API = axios.create({
   withCredentials: true,
 });
 
+// ==================== Request Interceptor ====================
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -24,6 +26,7 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// ==================== Response Interceptor ====================
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -39,7 +42,7 @@ API.interceptors.response.use(
   }
 );
 
-// ==================== Auth ====================
+// ==================== Auth APIs ====================
 export const authApi = {
   register: async (data: RegisterInput): Promise<AuthResponse> => {
     const res = await API.post<AuthResponse>('/auth/register', data);
@@ -58,6 +61,28 @@ export const authApi = {
     newPassword: string;
   }): Promise<{ message: string }> => {
     const res = await API.patch('/auth/change-password', data);
+    return res.data;
+  },
+  updateProfile: async (data: {
+    full_name?: string;
+    phone?: string;
+    national_id?: string;
+  }): Promise<{ message: string; data: { user: User } }> => {
+    const res = await API.patch('/auth/profile', data);
+    return res.data;
+  },
+  uploadAvatar: async (
+    file: File
+  ): Promise<{ message: string; data: { user: User } }> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const res = await API.post('/auth/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+  deleteAvatar: async (): Promise<{ message: string }> => {
+    const res = await API.delete('/auth/avatar');
     return res.data;
   },
 };
@@ -80,7 +105,7 @@ export interface ReportEvidence {
   };
 }
 
-// ==================== Reports ====================
+// ==================== Report APIs ====================
 export const reportApi = {
   create: async (
     data: CreateReportInput
@@ -138,7 +163,7 @@ export const reportApi = {
   },
 };
 
-// ==================== Admin ====================
+// ==================== Admin APIs ====================
 export interface AdminUser {
   id: string;
   email: string;
@@ -224,7 +249,7 @@ export const adminApi = {
   },
 };
 
-// ==================== Messaging ====================
+// ==================== Messaging Types ====================
 export interface Contact {
   id: string;
   full_name: string;
@@ -244,7 +269,11 @@ export interface Message {
   is_read: boolean;
   is_deleted: boolean;
   createdAt: string;
-  sender?: { id: string; full_name: string; role: string };
+  sender?: {
+    id: string;
+    full_name: string;
+    role: string;
+  };
 }
 
 export interface ConversationSummary {
@@ -260,6 +289,7 @@ export interface ConversationSummary {
   last_message_at: string | null;
 }
 
+// ==================== Messaging APIs ====================
 export const messageApi = {
   getContacts: async (): Promise<{ data: { contacts: Contact[] } }> => {
     const res = await API.get('/messages/contacts');
@@ -274,7 +304,12 @@ export const messageApi = {
   startConversation: async (
     otherUserId: string
   ): Promise<{
-    data: { conversation: { id: string; other_user: Contact } };
+    data: {
+      conversation: {
+        id: string;
+        other_user: Contact;
+      };
+    };
   }> => {
     const res = await API.post('/messages/conversations', { otherUserId });
     return res.data;
@@ -307,6 +342,7 @@ export const messageApi = {
     const formData = new FormData();
     formData.append('file', file);
     if (caption) formData.append('caption', caption);
+
     const res = await API.post(
       `/messages/conversations/${conversationId}/attachment`,
       formData,
@@ -320,7 +356,7 @@ export const messageApi = {
   },
 };
 
-// ==================== Alerts ====================
+// ==================== Alert Types ====================
 export type AlertType = 'fugitive' | 'missing' | 'wanted' | 'announcement';
 export type AlertStatus = 'active' | 'caught' | 'found' | 'archived';
 
@@ -340,6 +376,7 @@ export interface PublicAlert {
   createdAt: string;
 }
 
+// ==================== Alert APIs ====================
 export const alertApi = {
   getPublic: async (params?: {
     type?: AlertType;
@@ -374,6 +411,7 @@ export const alertApi = {
     if (data.reward) formData.append('reward', data.reward);
     if (data.status) formData.append('status', data.status);
     if (data.photo) formData.append('photo', data.photo);
+
     const res = await API.post('/alerts', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -403,6 +441,7 @@ export const alertApi = {
         }
       }
     });
+
     const res = await API.patch(`/alerts/${id}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -414,7 +453,7 @@ export const alertApi = {
   },
 };
 
-// ==================== Notifications ====================
+// ==================== Notification Types ====================
 export type NotificationType =
   | 'report_created'
   | 'report_status_changed'
@@ -433,6 +472,7 @@ export interface AppNotification {
   createdAt: string;
 }
 
+// ==================== Notification APIs ====================
 export const notificationApi = {
   list: async (): Promise<{
     data: { notifications: AppNotification[]; unreadCount: number };

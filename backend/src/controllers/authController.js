@@ -1,5 +1,7 @@
 const { User } = require('../models');
 const { signAccessToken, signRefreshToken } = require('../utils/tokenUtils');
+const fs = require('fs');
+const path = require('path');
 
 // POST /api/v1/auth/register
 exports.register = async (req, res) => {
@@ -34,6 +36,9 @@ exports.register = async (req, res) => {
           email: user.email,
           full_name: user.full_name,
           role: user.role,
+          phone: user.phone,
+          national_id: user.national_id,
+          avatar_url: user.avatar_url,
         },
         accessToken,
         refreshToken,
@@ -88,6 +93,9 @@ exports.login = async (req, res) => {
           email: user.email,
           full_name: user.full_name,
           role: user.role,
+          phone: user.phone,
+          national_id: user.national_id,
+          avatar_url: user.avatar_url,
         },
         accessToken,
         refreshToken,
@@ -100,13 +108,19 @@ exports.login = async (req, res) => {
 
 // GET /api/v1/auth/me
 exports.me = async (req, res) => {
+  const user = await User.findByPk(req.user.id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
   res.json({
     data: {
       user: {
-        id: req.user.id,
-        email: req.user.email,
-        full_name: req.user.full_name,
-        role: req.user.role,
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        phone: user.phone,
+        national_id: user.national_id,
+        avatar_url: user.avatar_url,
       },
     },
   });
@@ -143,6 +157,125 @@ exports.changePassword = async (req, res) => {
     await user.save();
 
     res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PATCH /api/v1/auth/profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const { full_name, phone, national_id } = req.body;
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (full_name !== undefined) {
+      if (!full_name.trim()) {
+        return res.status(400).json({ message: 'Name cannot be empty' });
+      }
+      user.full_name = full_name.trim();
+    }
+    if (phone !== undefined) user.phone = phone || null;
+    if (national_id !== undefined) user.national_id = national_id || null;
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+          phone: user.phone,
+          national_id: user.national_id,
+          avatar_url: user.avatar_url,
+        },
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// POST /api/v1/auth/avatar
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete old avatar if exists
+    if (user.avatar_url) {
+      const oldPath = path.join(
+        __dirname,
+        '../../',
+        user.avatar_url.replace(/^\//, '')
+      );
+      if (fs.existsSync(oldPath)) {
+        try {
+          fs.unlinkSync(oldPath);
+        } catch (e) {
+          console.error('Failed to delete old avatar:', e.message);
+        }
+      }
+    }
+
+    user.avatar_url = `/uploads/avatars/${req.file.filename}`;
+    await user.save();
+
+    res.json({
+      message: 'Avatar updated',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+          phone: user.phone,
+          national_id: user.national_id,
+          avatar_url: user.avatar_url,
+        },
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// DELETE /api/v1/auth/avatar
+exports.deleteAvatar = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.avatar_url) {
+      const oldPath = path.join(
+        __dirname,
+        '../../',
+        user.avatar_url.replace(/^\//, '')
+      );
+      if (fs.existsSync(oldPath)) {
+        try {
+          fs.unlinkSync(oldPath);
+        } catch (e) {
+          console.error('Failed to delete avatar:', e.message);
+        }
+      }
+      user.avatar_url = null;
+      await user.save();
+    }
+
+    res.json({ message: 'Avatar removed' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
