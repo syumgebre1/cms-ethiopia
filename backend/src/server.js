@@ -15,12 +15,12 @@ const adminRoutes = require('./routes/adminRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const verifyRoutes = require('./routes/verifyRoutes');
 const { setupSocket } = require('./socket');
 
 const app = express();
 const server = http.createServer(app);
 
-// ==================== CORS Configuration ====================
 const allowedOrigins = [
   'http://localhost:5173',
   process.env.CLIENT_URL,
@@ -41,7 +41,6 @@ const corsOptions = {
 const io = new Server(server, { cors: corsOptions });
 app.set('io', io);
 
-// ==================== Middleware ====================
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -54,7 +53,6 @@ app.use(morgan('dev'));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// ==================== Routes ====================
 app.get('/api/v1/health', (req, res) =>
   res.json({ ok: true, time: new Date(), env: process.env.NODE_ENV })
 );
@@ -65,19 +63,17 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/messages', messageRoutes);
 app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/verify', verifyRoutes);
 
-// ==================== 404 ====================
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// ==================== Error Handler ====================
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ message: err.message || 'Server error' });
 });
 
-// ==================== Start Server ====================
 const PORT = process.env.PORT || 5000;
 
 (async () => {
@@ -85,7 +81,6 @@ const PORT = process.env.PORT || 5000;
     await sequelize.authenticate();
     console.log('✅ MySQL connected');
 
-    // Only sync schema in development — never in production
     if (process.env.NODE_ENV !== 'production') {
       await sequelize.sync();
       console.log('✅ Models synced (development)');
@@ -97,7 +92,6 @@ const PORT = process.env.PORT || 5000;
 
     server.listen(PORT, () => {
       console.log(`🚀 Server on port ${PORT}`);
-      console.log(`   Health: http://localhost:${PORT}/api/v1/health`);
       console.log(`   Env: ${process.env.NODE_ENV || 'development'}`);
       console.log(`   Socket.IO: ready`);
     });

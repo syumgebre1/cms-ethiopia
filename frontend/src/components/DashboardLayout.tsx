@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import VerifyEmailBanner from './VerifyEmailBanner';
 
 interface Props {
   children: ReactNode;
@@ -18,12 +19,10 @@ export default function DashboardLayout({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
 
-  // Auto-close drawer on route change
   useEffect(() => {
     setDrawerOpen(false);
   }, [location.pathname]);
 
-  // Prevent body scroll when drawer open
   useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = 'hidden';
@@ -87,6 +86,9 @@ export default function DashboardLayout({
 
           {actions && <div className="flex gap-2">{actions}</div>}
         </header>
+
+        {/* Verify email banner */}
+        <VerifyEmailBanner />
 
         {/* Page content */}
         <div className="flex-1 min-w-0">{children}</div>

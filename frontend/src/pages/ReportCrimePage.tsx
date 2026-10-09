@@ -1,5 +1,5 @@
 import { useState, useRef, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { reportApi } from '../services/api';
 import { useAuth } from '../context/useAuth';
@@ -16,18 +16,18 @@ export default function ReportCrimePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const isUnverifiedCitizen = user?.role === 'citizen' && !user.is_verified;
+
   const [crimeType, setCrimeType] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [urgency, setUrgency] = useState<Urgency>('medium');
   const [isAnonymous, setIsAnonymous] = useState(false);
 
-  // Files
   const [files, setFiles] = useState<PendingFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // GPS
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
@@ -36,6 +36,32 @@ export default function ReportCrimePage() {
 
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // ⚠️ Block unverified citizens
+  if (isUnverifiedCitizen) {
+    return (
+      <DashboardLayout activeItem="report" title="Report Crime">
+        <div className="p-4 lg:p-8 max-w-2xl mx-auto">
+          <div className="card bg-base-100 shadow-sm p-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-warning/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">🔒</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              Verify your email to continue
+            </h2>
+            <p className="text-base-content/70 mb-6 max-w-md mx-auto">
+              For security and accountability, crime reports can only be
+              submitted by verified users. This helps us prevent spam and
+              ensures officers can reach you if needed.
+            </p>
+            <Link to="/verify-email" className="btn btn-primary">
+              📧 Verify Email Now
+            </Link>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const handleUseMyLocation = () => {
     setLocationError('');
@@ -75,12 +101,9 @@ export default function ReportCrimePage() {
     setLocationError('');
   };
 
-  // ==================== File handling ====================
   const handleFilesAdded = (newFiles: FileList | null) => {
     if (!newFiles) return;
     const arr = Array.from(newFiles);
-
-    // Limit total to 5
     const remaining = 5 - files.length;
     const toAdd = arr.slice(0, remaining);
 
@@ -121,7 +144,6 @@ export default function ReportCrimePage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  // ==================== Submit ====================
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
@@ -145,14 +167,10 @@ export default function ReportCrimePage() {
 
       const reportId = res.data.report.id;
 
-      // Upload evidence if any
       if (files.length > 0) {
         setUploading(true);
         try {
-          await reportApi.uploadEvidence(
-            reportId,
-            files.map((f) => f.file)
-          );
+          await reportApi.uploadEvidence(reportId, files.map((f) => f.file));
         } catch (uploadErr) {
           console.error('Evidence upload failed:', uploadErr);
         } finally {
@@ -186,7 +204,6 @@ export default function ReportCrimePage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Category / Title */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="label py-1">
@@ -234,7 +251,6 @@ export default function ReportCrimePage() {
               </div>
             </div>
 
-            {/* Description */}
             <div>
               <label className="label py-1">
                 <span className="label-text font-medium">
@@ -249,7 +265,6 @@ export default function ReportCrimePage() {
               />
             </div>
 
-            {/* Location + Urgency */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="label py-1">
@@ -298,8 +313,7 @@ export default function ReportCrimePage() {
                     </span>
                   </div>
                   <p className="text-xs text-base-content/60">
-                    Attach your device's exact coordinates to help officers find
-                    the location on the map.
+                    Attach your device's exact coordinates.
                   </p>
 
                   {locationGranted && latitude && longitude && (
@@ -351,7 +365,7 @@ export default function ReportCrimePage() {
               </div>
             </div>
 
-            {/* ==================== EVIDENCE UPLOAD ==================== */}
+            {/* Evidence */}
             <div>
               <label className="label py-1">
                 <span className="label-text font-medium">
@@ -362,7 +376,6 @@ export default function ReportCrimePage() {
                 </span>
               </label>
 
-              {/* Drop zone */}
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
@@ -378,9 +391,7 @@ export default function ReportCrimePage() {
                   className="hidden"
                 />
                 <p className="text-3xl mb-2">📎</p>
-                <p className="font-medium text-sm">
-                  Drag & drop files here
-                </p>
+                <p className="font-medium text-sm">Drag & drop files here</p>
                 <p className="text-xs text-base-content/60 mt-1">
                   or click to browse
                 </p>
@@ -389,7 +400,6 @@ export default function ReportCrimePage() {
                 </p>
               </div>
 
-              {/* File list */}
               {files.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {files.map((pf, i) => (
@@ -429,7 +439,6 @@ export default function ReportCrimePage() {
                       </button>
                     </div>
                   ))}
-
                   <p className="text-xs text-base-content/60">
                     {files.length}/5 files selected
                   </p>
@@ -437,7 +446,6 @@ export default function ReportCrimePage() {
               )}
             </div>
 
-            {/* Anonymous */}
             <label className="flex items-center gap-2 cursor-pointer pt-2">
               <input
                 type="checkbox"
@@ -448,7 +456,6 @@ export default function ReportCrimePage() {
               <span className="label-text">{t('report.anonymous')}</span>
             </label>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={submitting || uploading}

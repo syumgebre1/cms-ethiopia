@@ -6,6 +6,7 @@ const Message = require('./Message');
 const PublicAlert = require('./PublicAlert');
 const Notification = require('./Notification');
 const ReportEvidence = require('./ReportEvidence');
+const EmailVerification = require('./EmailVerification');
 
 // User ↔ Report
 User.hasMany(Report, { foreignKey: 'user_id', as: 'reports' });
@@ -47,6 +48,14 @@ Report.hasMany(ReportEvidence, {
 ReportEvidence.belongsTo(Report, { foreignKey: 'report_id', as: 'report' });
 ReportEvidence.belongsTo(User, { foreignKey: 'uploaded_by', as: 'uploader' });
 
+// User ↔ EmailVerification
+User.hasMany(EmailVerification, {
+  foreignKey: 'user_id',
+  as: 'verifications',
+  onDelete: 'CASCADE',
+});
+EmailVerification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 module.exports = {
   sequelize,
   User,
@@ -56,4 +65,5 @@ module.exports = {
   PublicAlert,
   Notification,
   ReportEvidence,
+  EmailVerification,
 };

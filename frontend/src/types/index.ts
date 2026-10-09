@@ -8,6 +8,7 @@ export interface User {
   phone?: string | null;
   national_id?: string | null;
   avatar_url?: string | null;
+  is_verified?: boolean;
 }
 
 export interface LoginInput {

@@ -85,6 +85,21 @@ export const authApi = {
     const res = await API.delete('/auth/avatar');
     return res.data;
   },
+  // ==================== Email Verification ====================
+  verifyStatus: async (): Promise<{ data: { is_verified: boolean } }> => {
+    const res = await API.get('/verify/status');
+    return res.data;
+  },
+  sendVerification: async (): Promise<{ message: string }> => {
+    const res = await API.post('/verify/send');
+    return res.data;
+  },
+  confirmVerification: async (
+    code: string
+  ): Promise<{ message: string; data: { user: User } }> => {
+    const res = await API.post('/verify/confirm', { code });
+    return res.data;
+  },
 };
 
 // ==================== Report Evidence ====================
