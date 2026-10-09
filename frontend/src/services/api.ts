@@ -8,7 +8,6 @@ import type {
   User,
 } from '../types';
 
-// ==================== Axios Instance ====================
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'https://cms-ethiopia.onrender.com/api/v1';
 
@@ -17,7 +16,6 @@ const API = axios.create({
   withCredentials: true,
 });
 
-// ==================== Request Interceptor ====================
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -26,7 +24,6 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// ==================== Response Interceptor ====================
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -42,7 +39,7 @@ API.interceptors.response.use(
   }
 );
 
-// ==================== Auth APIs ====================
+// ==================== Auth ====================
 export const authApi = {
   register: async (data: RegisterInput): Promise<AuthResponse> => {
     const res = await API.post<AuthResponse>('/auth/register', data);
@@ -65,7 +62,25 @@ export const authApi = {
   },
 };
 
-// ==================== Report APIs ====================
+// ==================== Report Evidence ====================
+export interface ReportEvidence {
+  id: string;
+  report_id: string;
+  uploaded_by: string | null;
+  file_url: string;
+  file_name: string;
+  file_type: string | null;
+  file_size: number | null;
+  notes: string | null;
+  createdAt: string;
+  uploader?: {
+    id: string;
+    full_name: string;
+    role: string;
+  };
+}
+
+// ==================== Reports ====================
 export const reportApi = {
   create: async (
     data: CreateReportInput
@@ -79,9 +94,7 @@ export const reportApi = {
     location: string;
     urgency: string;
   }): Promise<{
-    data: {
-      report: { id: string; crime_type: string; reference: string };
-    };
+    data: { report: { id: string; crime_type: string; reference: string } };
   }> => {
     const res = await API.post('/reports/anonymous', data);
     return res.data;
@@ -105,9 +118,27 @@ export const reportApi = {
     const res = await API.patch(`/reports/${id}/status`, { status });
     return res.data;
   },
+  uploadEvidence: async (
+    reportId: string,
+    files: File[]
+  ): Promise<{ message: string; data: { evidence: ReportEvidence[] } }> => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+
+    const res = await API.post(`/reports/${reportId}/evidence`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+  deleteEvidence: async (
+    evidenceId: string
+  ): Promise<{ message: string }> => {
+    const res = await API.delete(`/reports/evidence/${evidenceId}`);
+    return res.data;
+  },
 };
 
-// ==================== Admin APIs ====================
+// ==================== Admin ====================
 export interface AdminUser {
   id: string;
   email: string;
@@ -168,9 +199,9 @@ export const adminApi = {
     });
     return res.data;
   },
-  listAllConversations: async (search?: string): Promise<{
-    data: { conversations: AuditConversation[] };
-  }> => {
+  listAllConversations: async (
+    search?: string
+  ): Promise<{ data: { conversations: AuditConversation[] } }> => {
     const res = await API.get('/admin/conversations', {
       params: search ? { search } : {},
     });
@@ -193,7 +224,7 @@ export const adminApi = {
   },
 };
 
-// ==================== Messaging Types ====================
+// ==================== Messaging ====================
 export interface Contact {
   id: string;
   full_name: string;
@@ -213,11 +244,7 @@ export interface Message {
   is_read: boolean;
   is_deleted: boolean;
   createdAt: string;
-  sender?: {
-    id: string;
-    full_name: string;
-    role: string;
-  };
+  sender?: { id: string; full_name: string; role: string };
 }
 
 export interface ConversationSummary {
@@ -233,7 +260,6 @@ export interface ConversationSummary {
   last_message_at: string | null;
 }
 
-// ==================== Messaging APIs ====================
 export const messageApi = {
   getContacts: async (): Promise<{ data: { contacts: Contact[] } }> => {
     const res = await API.get('/messages/contacts');
@@ -248,12 +274,7 @@ export const messageApi = {
   startConversation: async (
     otherUserId: string
   ): Promise<{
-    data: {
-      conversation: {
-        id: string;
-        other_user: Contact;
-      };
-    };
+    data: { conversation: { id: string; other_user: Contact } };
   }> => {
     const res = await API.post('/messages/conversations', { otherUserId });
     return res.data;
@@ -286,7 +307,6 @@ export const messageApi = {
     const formData = new FormData();
     formData.append('file', file);
     if (caption) formData.append('caption', caption);
-
     const res = await API.post(
       `/messages/conversations/${conversationId}/attachment`,
       formData,
@@ -300,7 +320,7 @@ export const messageApi = {
   },
 };
 
-// ==================== Alert Types ====================
+// ==================== Alerts ====================
 export type AlertType = 'fugitive' | 'missing' | 'wanted' | 'announcement';
 export type AlertStatus = 'active' | 'caught' | 'found' | 'archived';
 
@@ -320,7 +340,6 @@ export interface PublicAlert {
   createdAt: string;
 }
 
-// ==================== Alert APIs ====================
 export const alertApi = {
   getPublic: async (params?: {
     type?: AlertType;
@@ -355,7 +374,6 @@ export const alertApi = {
     if (data.reward) formData.append('reward', data.reward);
     if (data.status) formData.append('status', data.status);
     if (data.photo) formData.append('photo', data.photo);
-
     const res = await API.post('/alerts', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -385,7 +403,6 @@ export const alertApi = {
         }
       }
     });
-
     const res = await API.patch(`/alerts/${id}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -397,7 +414,7 @@ export const alertApi = {
   },
 };
 
-// ==================== Notification Types ====================
+// ==================== Notifications ====================
 export type NotificationType =
   | 'report_created'
   | 'report_status_changed'
@@ -416,7 +433,6 @@ export interface AppNotification {
   createdAt: string;
 }
 
-// ==================== Notification APIs ====================
 export const notificationApi = {
   list: async (): Promise<{
     data: { notifications: AppNotification[]; unreadCount: number };

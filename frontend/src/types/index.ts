@@ -1,4 +1,3 @@
-// ==================== User ====================
 export type UserRole = 'citizen' | 'officer' | 'detective' | 'admin';
 
 export interface User {
@@ -8,7 +7,6 @@ export interface User {
   role: UserRole;
 }
 
-// ==================== Auth ====================
 export interface LoginInput {
   email: string;
   password: string;
@@ -39,7 +37,6 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-// ==================== Report ====================
 export type Urgency = 'low' | 'medium' | 'high' | 'critical';
 export type ReportStatus =
   | 'pending'
@@ -47,6 +44,23 @@ export type ReportStatus =
   | 'escalated'
   | 'resolved'
   | 'rejected';
+
+export interface ReportEvidence {
+  id: string;
+  report_id: string;
+  uploaded_by: string | null;
+  file_url: string;
+  file_name: string;
+  file_type: string | null;
+  file_size: number | null;
+  notes: string | null;
+  createdAt: string;
+  uploader?: {
+    id: string;
+    full_name: string;
+    role: string;
+  };
+}
 
 export interface Report {
   id: string;
@@ -61,6 +75,7 @@ export interface Report {
   user_id: string | null;
   createdAt: string;
   updatedAt: string;
+  evidence?: ReportEvidence[];
   reporter?: {
     id: string;
     full_name: string;

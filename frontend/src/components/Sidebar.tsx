@@ -36,7 +36,8 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
     }`;
 
   return (
-    <aside className="w-64 min-h-screen bg-base-100 border-r border-base-300 flex flex-col sticky top-0 h-screen">
+    <aside className="w-64 h-screen bg-base-100 border-r border-base-300 flex flex-col">
+      {/* Logo */}
       <div className="p-4 border-b border-base-300">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
@@ -55,6 +56,7 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
         </div>
       </div>
 
+      {/* Nav */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         <p className="text-xs uppercase text-base-content/50 font-semibold px-3 mt-2 mb-1">
           {t('sidebar.main')}
@@ -65,7 +67,7 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           {t('sidebar.dashboard')}
         </NavLink>
 
-        <NavLink to="/dashboard" className={linkClass('submissions')}>
+        <NavLink to="/reports" className={linkClass('submissions')}>
           <span className="text-lg">📄</span>
           {isStaff ? t('sidebar.all_reports') : t('sidebar.my_submissions')}
         </NavLink>
@@ -145,6 +147,7 @@ export default function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
         )}
       </nav>
 
+      {/* User card */}
       <div className="p-3 border-t border-base-300">
         <div className="flex items-center gap-3 p-2 rounded-lg bg-base-200">
           <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">

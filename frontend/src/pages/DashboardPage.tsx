@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/useAuth';
 import { reportApi, messageApi } from '../services/api';
-import Sidebar from '../components/Sidebar';
+import DashboardLayout from '../components/DashboardLayout';
 import NotificationBell from '../components/NotificationBell';
 import type { Report } from '../types';
 
@@ -72,344 +72,315 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex">
-      <Sidebar activeItem="dashboard" />
-
-      <div className="flex-1 min-w-0">
-        <header className="bg-base-100 border-b border-base-300 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-          <div>
-            <h1 className="text-lg font-bold">{t('dashboard.title')}</h1>
-            <p className="text-xs text-base-content/60">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
+    <DashboardLayout
+      activeItem="dashboard"
+      title={t('dashboard.title')}
+      actions={<NotificationBell />}
+    >
+      <div className="p-4 lg:p-8">
+        {messageError && (
+          <div className="alert alert-warning text-sm mb-4">
+            <span>{messageError}</span>
           </div>
+        )}
 
-          <div className="flex items-center gap-3">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="input input-bordered input-sm hidden md:block w-64"
-            />
-            <NotificationBell />
-            <div className="text-sm text-base-content/70 hidden lg:block">
-              Hi, <span className="font-semibold">{user?.full_name}</span>
+        {/* Welcome hero */}
+        <div className="card bg-gradient-to-r from-primary to-primary/70 text-white shadow-md p-6 mb-6">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold">
+                {t('dashboard.welcome', {
+                  name: user?.full_name?.split(' ')[0],
+                })}{' '}
+                👋
+              </h1>
+              <p className="text-sm opacity-90 mt-1">
+                {getGreeting()} · {t('dashboard.signed_in_as')}{' '}
+                <span className="font-semibold capitalize">
+                  {user?.role ? t(`role.${user.role}`) : ''}
+                </span>
+              </p>
             </div>
+            {!isStaff && (
+              <Link
+                to="/report"
+                className="btn btn-sm md:btn-md bg-white text-primary hover:bg-white/90 border-none"
+              >
+                🚨 {t('dashboard.report_crime_button')}
+              </Link>
+            )}
           </div>
-        </header>
+        </div>
 
-        <main className="p-4 lg:p-8">
-          {messageError && (
-            <div className="alert alert-warning text-sm mb-4">
-              <span>{messageError}</span>
-            </div>
-          )}
-
-          <div className="card bg-gradient-to-r from-primary to-primary/70 text-white shadow-md p-6 mb-6">
-            <div className="flex justify-between items-center flex-wrap gap-4">
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="card bg-base-100 shadow-sm p-4">
+            <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold">
-                  {t('dashboard.welcome', {
-                    name: user?.full_name?.split(' ')[0],
-                  })}{' '}
-                  👋
-                </h1>
-                <p className="text-sm opacity-90 mt-1">
-                  {getGreeting()} · {t('dashboard.signed_in_as')}{' '}
-                  <span className="font-semibold capitalize">
-                    {user?.role ? t(`role.${user.role}`) : ''}
-                  </span>
+                <p className="text-xs text-base-content/60 uppercase">
+                  {t('dashboard.total_reports')}
+                </p>
+                <p className="text-3xl font-bold text-primary mt-1">{total}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                📊
+              </div>
+            </div>
+          </div>
+          <div className="card bg-base-100 shadow-sm p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs text-base-content/60 uppercase">
+                  {t('dashboard.pending')}
+                </p>
+                <p className="text-3xl font-bold text-warning mt-1">{pending}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+                ⏳
+              </div>
+            </div>
+          </div>
+          <div className="card bg-base-100 shadow-sm p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs text-base-content/60 uppercase">
+                  {t('dashboard.resolved')}
+                </p>
+                <p className="text-3xl font-bold text-success mt-1">
+                  {resolved}
                 </p>
               </div>
-              {!isStaff && (
-                <Link
-                  to="/report"
-                  className="btn btn-sm md:btn-md bg-white text-primary hover:bg-white/90 border-none"
-                >
-                  🚨 {t('dashboard.report_crime_button')}
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="card bg-base-100 shadow-sm p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs text-base-content/60 uppercase">
-                    {t('dashboard.total_reports')}
-                  </p>
-                  <p className="text-3xl font-bold text-primary mt-1">{total}</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  📊
-                </div>
-              </div>
-            </div>
-            <div className="card bg-base-100 shadow-sm p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs text-base-content/60 uppercase">
-                    {t('dashboard.pending')}
-                  </p>
-                  <p className="text-3xl font-bold text-warning mt-1">
-                    {pending}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
-                  ⏳
-                </div>
-              </div>
-            </div>
-            <div className="card bg-base-100 shadow-sm p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs text-base-content/60 uppercase">
-                    {t('dashboard.resolved')}
-                  </p>
-                  <p className="text-3xl font-bold text-success mt-1">
-                    {resolved}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
-                  ✅
-                </div>
-              </div>
-            </div>
-            <div className="card bg-base-100 shadow-sm p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs text-base-content/60 uppercase">
-                    {t('dashboard.escalated')}
-                  </p>
-                  <p className="text-3xl font-bold text-info mt-1">
-                    {escalated}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
-                  📈
-                </div>
+              <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
+                ✅
               </div>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="card bg-base-100 shadow-sm p-6 lg:col-span-2">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold">
-                  {isStaff
-                    ? t('dashboard.recent_reports_staff')
-                    : t('dashboard.recent_reports')}
-                </h2>
+          <div className="card bg-base-100 shadow-sm p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs text-base-content/60 uppercase">
+                  {t('dashboard.escalated')}
+                </p>
+                <p className="text-3xl font-bold text-info mt-1">
+                  {escalated}
+                </p>
               </div>
-
-              {loading ? (
-                <div className="flex justify-center py-8">
-                  <span className="loading loading-spinner loading-md"></span>
-                </div>
-              ) : reports.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-4xl mb-3">📭</p>
-                  <p className="text-base-content/60">
-                    {t('dashboard.no_reports')}
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>{t('dashboard.table_type')}</th>
-                        <th>{t('dashboard.table_location')}</th>
-                        {isStaff && <th>Reporter</th>}
-                        <th>{t('dashboard.table_urgency')}</th>
-                        <th>{t('dashboard.table_status')}</th>
-                        {isStaff && <th>Actions</th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reports.slice(0, 10).map((r) => (
-                        <tr
-                          key={r.id}
-                          onClick={() => navigate(`/reports/${r.id}`)}
-                          className="hover cursor-pointer"
-                        >
-                          <td className="font-medium">{r.crime_type}</td>
-                          <td className="text-base-content/70">
-                            {r.location}
-                          </td>
-                          {isStaff && (
-                            <td className="text-xs">
-                              {r.reporter ? (
-                                <div>
-                                  <p className="font-medium">
-                                    {r.reporter.full_name}
-                                  </p>
-                                  <p className="text-base-content/60">
-                                    {r.reporter.email}
-                                  </p>
-                                </div>
-                              ) : (
-                                <span className="badge badge-ghost badge-sm">
-                                  Anonymous
-                                </span>
-                              )}
-                            </td>
-                          )}
-                          <td>
-                            <span
-                              className={`badge badge-sm ${
-                                r.urgency === 'critical'
-                                  ? 'badge-error'
-                                  : r.urgency === 'high'
-                                  ? 'badge-warning'
-                                  : r.urgency === 'medium'
-                                  ? 'badge-info'
-                                  : 'badge-ghost'
-                              }`}
-                            >
-                              {t(`report.urgency_${r.urgency}`)}
-                            </span>
-                          </td>
-                          <td>
-                            <span
-                              className={`badge badge-sm ${
-                                r.status === 'pending'
-                                  ? 'badge-warning'
-                                  : r.status === 'resolved'
-                                  ? 'badge-success'
-                                  : r.status === 'escalated'
-                                  ? 'badge-info'
-                                  : 'badge-ghost'
-                              }`}
-                            >
-                              {t(`status.${r.status}`)}
-                            </span>
-                          </td>
-                          {isStaff && (
-                            <td>
-                              <button
-                                onClick={(e) => handleMessageReporter(e, r)}
-                                disabled={!r.user_id}
-                                className="btn btn-ghost btn-xs"
-                                title={
-                                  r.user_id
-                                    ? 'Message reporter'
-                                    : 'Anonymous report'
-                                }
-                              >
-                                💬
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            <div className="card bg-base-100 shadow-sm p-6">
-              <h2 className="text-lg font-bold mb-4">
-                {t('dashboard.weekly_activity')}
-              </h2>
-              <div className="flex items-end justify-between h-40 gap-2">
-                {weeklyData.map((val, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 flex flex-col items-center gap-1"
-                  >
-                    <div
-                      className="w-full bg-primary rounded-t-md transition-all hover:bg-primary/80"
-                      style={{ height: `${(val / maxVal) * 100}%` }}
-                    ></div>
-                    <span className="text-xs text-base-content/60">
-                      {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
-                    </span>
-                  </div>
-                ))}
+              <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center text-info">
+                📈
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="card bg-base-100 shadow-sm p-6 lg:col-span-2">
-              <h2 className="text-lg font-bold mb-4">
-                {t('dashboard.system_guidelines')}
+        {/* Recent reports + weekly */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="card bg-base-100 shadow-sm p-6 lg:col-span-2">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">
+                {isStaff
+                  ? t('dashboard.recent_reports_staff')
+                  : t('dashboard.recent_reports')}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-3 rounded-lg bg-base-200">
-                  <p className="text-2xl">ℹ️</p>
-                  <p className="font-medium text-sm mt-2">
-                    {t('dashboard.guideline_1_title')}
-                  </p>
-                  <p className="text-xs text-base-content/60 mt-1">
-                    {t('dashboard.guideline_1_desc')}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-base-200">
-                  <p className="text-2xl">🛡️</p>
-                  <p className="font-medium text-sm mt-2">
-                    {t('dashboard.guideline_2_title')}
-                  </p>
-                  <p className="text-xs text-base-content/60 mt-1">
-                    {t('dashboard.guideline_2_desc')}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-base-200">
-                  <p className="text-2xl">🔔</p>
-                  <p className="font-medium text-sm mt-2">
-                    {t('dashboard.guideline_3_title')}
-                  </p>
-                  <p className="text-xs text-base-content/60 mt-1">
-                    {t('dashboard.guideline_3_desc')}
-                  </p>
-                </div>
-              </div>
+              <Link to="/reports" className="link link-primary text-sm">
+                View all →
+              </Link>
             </div>
 
-            <div className="card bg-base-100 shadow-sm p-6">
-              <h2 className="text-lg font-bold mb-4">
-                {t('dashboard.quick_actions')}
-              </h2>
-              <div className="space-y-2">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <span className="loading loading-spinner loading-md"></span>
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-4xl mb-3">📭</p>
+                <p className="text-base-content/60">
+                  {t('dashboard.no_reports')}
+                </p>
                 {!isStaff && (
                   <Link
                     to="/report"
-                    className="btn btn-outline btn-sm w-full justify-start"
+                    className="btn btn-primary btn-sm mt-4 rounded-full"
                   >
-                    🚨 {t('dashboard.action_report')}
+                    {t('dashboard.create_first_report')}
                   </Link>
                 )}
-                <Link
-                  to="/messages"
-                  className="btn btn-outline btn-sm w-full justify-start"
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>{t('dashboard.table_type')}</th>
+                      <th className="hidden md:table-cell">
+                        {t('dashboard.table_location')}
+                      </th>
+                      {isStaff && (
+                        <th className="hidden lg:table-cell">Reporter</th>
+                      )}
+                      <th>{t('dashboard.table_status')}</th>
+                      {isStaff && <th>Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reports.slice(0, 10).map((r) => (
+                      <tr
+                        key={r.id}
+                        onClick={() => navigate(`/reports/${r.id}`)}
+                        className="hover cursor-pointer"
+                      >
+                        <td className="font-medium">{r.crime_type}</td>
+                        <td className="text-base-content/70 hidden md:table-cell">
+                          {r.location}
+                        </td>
+                        {isStaff && (
+                          <td className="text-xs hidden lg:table-cell">
+                            {r.reporter ? (
+                              <p className="font-medium">
+                                {r.reporter.full_name}
+                              </p>
+                            ) : (
+                              <span className="badge badge-ghost badge-sm">
+                                Anonymous
+                              </span>
+                            )}
+                          </td>
+                        )}
+                        <td>
+                          <span
+                            className={`badge badge-sm ${
+                              r.status === 'pending'
+                                ? 'badge-warning'
+                                : r.status === 'resolved'
+                                ? 'badge-success'
+                                : r.status === 'escalated'
+                                ? 'badge-info'
+                                : 'badge-ghost'
+                            }`}
+                          >
+                            {t(`status.${r.status}`)}
+                          </span>
+                        </td>
+                        {isStaff && (
+                          <td>
+                            <button
+                              onClick={(e) => handleMessageReporter(e, r)}
+                              disabled={!r.user_id}
+                              className="btn btn-ghost btn-xs"
+                              title={
+                                r.user_id
+                                  ? 'Message reporter'
+                                  : 'Anonymous report'
+                              }
+                            >
+                              💬
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div className="card bg-base-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold mb-4">
+              {t('dashboard.weekly_activity')}
+            </h2>
+            <div className="flex items-end justify-between h-40 gap-2">
+              {weeklyData.map((val, i) => (
+                <div
+                  key={i}
+                  className="flex-1 flex flex-col items-center gap-1"
                 >
-                  💬 {t('dashboard.action_messages')}
-                </Link>
-                <Link
-                  to="/notifications"
-                  className="btn btn-outline btn-sm w-full justify-start"
-                >
-                  🔔 Notifications
-                </Link>
-                {isAdmin && (
-                  <button
-                    onClick={() => navigate('/admin/users')}
-                    className="btn btn-outline btn-sm w-full justify-start"
-                  >
-                    👥 {t('dashboard.action_manage_users')}
-                  </button>
-                )}
+                  <div
+                    className="w-full bg-primary rounded-t-md transition-all hover:bg-primary/80"
+                    style={{ height: `${(val / maxVal) * 100}%` }}
+                  ></div>
+                  <span className="text-xs text-base-content/60">
+                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Guidelines + quick actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="card bg-base-100 shadow-sm p-6 lg:col-span-2">
+            <h2 className="text-lg font-bold mb-4">
+              {t('dashboard.system_guidelines')}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-3 rounded-lg bg-base-200">
+                <p className="text-2xl">ℹ️</p>
+                <p className="font-medium text-sm mt-2">
+                  {t('dashboard.guideline_1_title')}
+                </p>
+                <p className="text-xs text-base-content/60 mt-1">
+                  {t('dashboard.guideline_1_desc')}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-base-200">
+                <p className="text-2xl">🛡️</p>
+                <p className="font-medium text-sm mt-2">
+                  {t('dashboard.guideline_2_title')}
+                </p>
+                <p className="text-xs text-base-content/60 mt-1">
+                  {t('dashboard.guideline_2_desc')}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-base-200">
+                <p className="text-2xl">🔔</p>
+                <p className="font-medium text-sm mt-2">
+                  {t('dashboard.guideline_3_title')}
+                </p>
+                <p className="text-xs text-base-content/60 mt-1">
+                  {t('dashboard.guideline_3_desc')}
+                </p>
               </div>
             </div>
           </div>
-        </main>
+
+          <div className="card bg-base-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold mb-4">
+              {t('dashboard.quick_actions')}
+            </h2>
+            <div className="space-y-2">
+              {!isStaff && (
+                <Link
+                  to="/report"
+                  className="btn btn-outline btn-sm w-full justify-start"
+                >
+                  🚨 {t('dashboard.action_report')}
+                </Link>
+              )}
+              <Link
+                to="/messages"
+                className="btn btn-outline btn-sm w-full justify-start"
+              >
+                💬 {t('dashboard.action_messages')}
+              </Link>
+              <Link
+                to="/notifications"
+                className="btn btn-outline btn-sm w-full justify-start"
+              >
+                🔔 Notifications
+              </Link>
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin/users')}
+                  className="btn btn-outline btn-sm w-full justify-start"
+                >
+                  👥 {t('dashboard.action_manage_users')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

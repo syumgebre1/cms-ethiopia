@@ -4,10 +4,10 @@ const router = express.Router();
 const reportController = require('../controllers/reportController');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/authorize');
+const uploadEvidence = require('../middleware/uploadEvidence');
 
-// Rate limit for anonymous reports — 3 per hour per IP
 const anonymousLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
+  windowMs: 60 * 60 * 1000,
   max: 3,
   message: {
     message:
@@ -17,14 +17,14 @@ const anonymousLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// ==================== PUBLIC ====================
+// Public
 router.post(
   '/anonymous',
   anonymousLimiter,
   reportController.createAnonymousReport
 );
 
-// ==================== AUTHENTICATED ====================
+// Authenticated
 router.use(authenticate);
 
 router.post('/', reportController.createReport);
@@ -40,5 +40,13 @@ router.patch(
   authorize('officer', 'detective', 'admin'),
   reportController.updateReportStatus
 );
+
+// Evidence upload
+router.post(
+  '/:id/evidence',
+  uploadEvidence.array('files', 5),
+  reportController.uploadEvidence
+);
+router.delete('/evidence/:evidenceId', reportController.deleteEvidence);
 
 module.exports = router;
