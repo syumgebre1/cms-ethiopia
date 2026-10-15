@@ -7,7 +7,7 @@ export default function LandingPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-base-100 flex flex-col">
       <Header />
 
       {/* Hero */}
@@ -23,21 +23,14 @@ export default function LandingPage() {
               {t('landing.hero_subtitle')}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                to="/register"
-                className="btn btn-primary rounded-full px-8"
-              >
+              <Link to="/register" className="btn btn-primary rounded-full px-8">
                 {t('landing.get_started')}
               </Link>
-              <Link
-                to="/login"
-                className="btn btn-outline rounded-full px-8"
-              >
+              <Link to="/login" className="btn btn-outline rounded-full px-8">
                 {t('landing.access_portal')}
               </Link>
             </div>
 
-            {/* Anonymous Report Link */}
             <div className="mt-6 flex items-center gap-2 text-sm">
               <span className="text-base-content/60">
                 Prefer not to sign up?
@@ -111,18 +104,62 @@ export default function LandingPage() {
       {/* Public Alerts */}
       <PublicAlertsSection />
 
-      {/* Footer */}
-      <footer className="bg-base-100 border-t border-base-300 py-8 px-4 lg:px-16">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-              <span className="text-white text-xs font-bold">C</span>
+      {/* ==================== FOOTER ==================== */}
+      <footer className="bg-base-100 border-t border-base-300 py-8 px-4 lg:px-16 mt-auto">
+        <div className="max-w-7xl mx-auto">
+          {/* Top row — logo + copyright */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+                <span className="text-white text-xs font-bold">C</span>
+              </div>
+              <span className="text-sm font-semibold">{t('app.name')}</span>
             </div>
-            <span className="text-sm font-semibold">{t('app.name')}</span>
+            <p className="text-xs text-base-content/60">
+              © {new Date().getFullYear()} {t('landing.footer_copyright')}
+            </p>
           </div>
-          <p className="text-xs text-base-content/60">
-            © {new Date().getFullYear()} {t('landing.footer_copyright')}
-          </p>
+
+          {/* Divider */}
+          <div className="divider my-4"></div>
+
+          {/* Bottom row — Developer credit */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-base-content/60">
+            <div className="text-center md:text-left">
+              <span>Designed &amp; developed by </span>
+              <span className="font-semibold text-base-content">
+                Syum Gebreyesus
+              </span>
+              <span className="hidden md:inline"> · Computer Engineer</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <a
+                href="https://syum-portfolio.netlify.app"
+                target="_blank"
+                rel="noreferrer"
+                className="link link-hover hover:text-primary transition"
+              >
+                🌐 Portfolio
+              </a>
+              <span className="opacity-30">·</span>
+              <a
+                href="https://github.com/syumgebre1"
+                target="_blank"
+                rel="noreferrer"
+                className="link link-hover hover:text-primary transition"
+              >
+                💻 GitHub
+              </a>
+              <span className="opacity-30">·</span>
+              <a
+                href="mailto:syum.gebre1@gmail.com"
+                className="link link-hover hover:text-primary transition"
+              >
+                ✉️ Contact
+              </a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
